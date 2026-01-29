@@ -78,19 +78,6 @@ bool check_compatibility()
 
 class PerfTopdownService
 {
-    struct topdown_record_t {
-        uint64_t num        { 0 };
-        uint64_t slots      { 0 };
-        uint64_t retiring   { 0 };
-        uint64_t bad_spec   { 0 };
-        uint64_t fe_bound   { 0 };
-        uint64_t be_bound   { 0 };
-        uint64_t heavy_ops  { 0 };
-        uint64_t br_mispred { 0 };
-        uint64_t fetch_lat  { 0 };
-        uint64_t mem_bound  { 0 };
-    };
-
     enum Level { Top, All };
 
     struct ThreadInfo {
