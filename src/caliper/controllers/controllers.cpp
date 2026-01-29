@@ -701,16 +701,16 @@ const char* builtin_rocm_option_specs = R"json(
  "type": "bool",
  "description": "Profile HIP API functions",
  "category": "region",
- "services": [ "roctracer" ],
- "config": { "CALI_ROCTRACER_TRACE_ACTIVITIES": "false" }
+ "services": [ "rocprofiler" ],
+ "config": { "CALI_ROCPROFILER_ENABLE_API_CALLBACKS": "true" }
 },
 {
  "name": "rocm.gputime",
  "description": "Report GPU time in AMD ROCm activities",
  "type": "bool",
  "category": "metric",
- "services": [ "roctracer" ],
- "config": { "CALI_ROCTRACER_TRACE_ACTIVITIES": "true", "CALI_ROCTRACER_RECORD_KERNEL_NAMES": "false" },
+ "services": [ "rocprofiler" ],
+ "config": { "CALI_ROCPROFILER_ENABLE_ACTIVITY_TRACING": "true" },
  "query":
  {
   "local": "let t.gpu.r=first(sum#rocm.activity.duration,rocm.activity.duration) select inclusive_scale(t.gpu.r,1e-9) as \"GPU time (I)\" unit sec,scale(t.gpu.r,1e-9) as \"GPU time (E)\" unit sec",
