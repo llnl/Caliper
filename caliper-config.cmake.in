@@ -2,10 +2,6 @@
 
 include(CMakeFindDependencyMacro)
 
-if (@CALIPER_HAVE_CUPTI@)
-  find_dependency(CUDAToolkit)
-endif()
-
 include("${CMAKE_CURRENT_LIST_DIR}/caliper-targets.cmake")
 
 set_and_check(caliper_INCLUDE_DIR "@PACKAGE_caliper_INSTALL_INCLUDE_DIR@")
@@ -38,6 +34,11 @@ endif()
 if (@CALIPER_HAVE_ROCPROFILER@)
   find_dependency(rocprofiler-sdk)
   find_dependency(rocprofiler-sdk-roctx)
+endif()
+
+# Add CUDAToolkit target for cupti support
+if (@CALIPER_HAVE_CUPTI@)
+  find_dependency(CUDAToolkit)
 endif()
 
 check_required_components(caliper)
