@@ -35,17 +35,17 @@ public:
     {
         // Config for local aggregation
         std::string local_select =
-            " inclusive_scale(sum#time.duration.ns,1e-9) as \"Host Time\""
+            " inclusive_scale(sum#rocm.host.duration,1e-9) as \"Host Time\""
             ",inclusive_scale(sum#rocm.activity.duration,1e-9) as \"GPU Time\""
-            ",inclusive_ratio(sum#rocm.activity.duration,sum#time.duration.ns,100.0) as \"GPU %\"";
+            ",inclusive_ratio(sum#rocm.activity.duration,sum#rocm.host.duration,100.0) as \"GPU %\"";
 
         // Config for second aggregation step in MPI mode (cross-process aggregation)
         std::string cross_select =
-            " avg(iscale#sum#time.duration.ns) as \"Avg Host Time\""
-            ",max(iscale#sum#time.duration.ns) as \"Max Host Time\""
+            " avg(iscale#sum#rocm.host.duration) as \"Avg Host Time\""
+            ",max(iscale#sum#rocm.host.duration) as \"Max Host Time\""
             ",avg(iscale#sum#rocm.activity.duration) as \"Avg GPU Time\""
             ",max(iscale#sum#rocm.activity.duration) as \"Max GPU Time\""
-            ",ratio(iscale#sum#rocm.activity.duration,iscale#sum#time.duration.ns,100.0) as \"GPU %\"";
+            ",ratio(iscale#sum#rocm.activity.duration,iscale#sum#rocm.host.duration,100.0) as \"GPU %\"";
 
         std::string groupby = "path";
 
@@ -119,15 +119,16 @@ const char* controller_spec = R"json(
 {
  "name"        : "rocm-activity-report",
  "description" : "Record and print AMD ROCm activities (kernel executions, memcopies, etc.)",
- "categories"  : [ "output", "region", "treeformatter", "event" ],
- "services"    : [ "aggregate", "roctracer", "event", "timer" ],
+ "categories"  : [ "output", "region", "treeformatter", "event", "metric" ],
+ "services"    : [ "aggregate", "rocprofiler", "event" ],
  "config"      :
  {
-  "CALI_CHANNEL_FLUSH_ON_EXIT"       : "false",
-  "CALI_EVENT_ENABLE_SNAPSHOT_INFO"  : "false",
-  "CALI_ROCTRACER_TRACE_ACTIVITIES"  : "true"
+  "CALI_CHANNEL_FLUSH_ON_EXIT"      : "false",
+  "CALI_EVENT_ENABLE_SNAPSHOT_INFO" : "false",
+  "CALI_ROCPROFILER_ENABLE_ACTIVITY_TRACING"    : "true",
+  "CALI_ROCPROFILER_ENABLE_SNAPSHOT_TIMESTAMPS" : "true"
  },
- "defaults"    : { "order_as_visited": "true", "output.append": "true" },
+ "defaults": { "order_as_visited": "true", "output.append": "true" },
  "options":
  [
   {
@@ -137,7 +138,6 @@ const char* controller_spec = R"json(
   },{
    "name": "show_kernels",
    "type": "bool",
-   "config": { "CALI_ROCTRACER_RECORD_KERNEL_NAMES": "true" },
    "description": "Show kernel names"
   },{
    "name": "output.append",
