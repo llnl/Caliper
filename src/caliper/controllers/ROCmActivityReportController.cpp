@@ -52,7 +52,20 @@ public:
         if (opts.is_enabled("show_kernels")) {
             groupby += ",rocm.kernel.name";
             local_select = std::string("rocm.kernel.name as Kernel,") + local_select;
-            cross_select  = std::string("rocm.kernel.name as Kernel,") + cross_select;
+            cross_select = std::string("rocm.kernel.name as Kernel,") + cross_select;
+        }
+
+
+        if (opts.is_set("rocm.counters")) {
+            auto counters_str = opts.get("rocm.counters");
+            auto counters = StringConverter(counters_str).to_stringlist();
+            for (const auto &str : counters) {
+                local_select.append(",sum(sum#rocm.").append(str).append(") as ").append(str);
+                cross_select.append(",min(sum#sum#rocm.").append(str).append(") as \"").append(str).append(" (min)\"");
+                cross_select.append(",avg(sum#sum#rocm.").append(str).append(") as \"").append(str).append(" (avg)\"");
+                cross_select.append(",max(sum#sum#rocm.").append(str).append(") as \"").append(str).append(" (max)\"");
+            }
+            config()["CALI_ROCPROFILER_COUNTERS"] = counters_str;
         }
 
         std::string format = util::build_tree_format_spec(config(), opts);
@@ -143,6 +156,10 @@ const char* controller_spec = R"json(
    "name": "output.append",
    "type": "bool",
    "description": "Use append mode when writing to files"
+  },{
+   "name": "rocm.counters",
+   "type": "string",
+   "description": "List of GPU hardware counters to collect"
   }
  ]
 }
