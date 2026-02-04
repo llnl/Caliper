@@ -8,6 +8,8 @@
 
 #include "caliper/common/Log.h"
 
+#include "../../common/StringConverter.h"
+
 #include "../../services/Services.h"
 
 #include <algorithm>
@@ -66,6 +68,17 @@ public:
 
         if (opts.is_set("use.mpi"))
             use_mpi = have_mpi && opts.is_enabled("use.mpi");
+
+        if (opts.is_set("rocm.counters")) {
+            auto counters_str = opts.get("rocm.counters");
+            auto counters = StringConverter(counters_str).to_stringlist();
+            int count = 0;
+            for (const auto &str : counters) {
+                q_local.append(count++ == 0 ? " select " : ",");
+                q_local.append("sum(sum#rocm.").append(str).append(") as ").append(str);
+            }
+            config()["CALI_ROCPROFILER_COUNTERS"] = counters_str;
+        }
 
         if (have_adiak) {
             config()["CALI_SERVICES_ENABLE"].append(",adiak_import");
@@ -154,6 +167,10 @@ const char* controller_spec = R"json(
     {
      "local": "select min(min#rocm.bytes) as \"bytes (min)\",max(max#rocm.bytes) as \"bytes (max)\",sum(sum#rocm.bytes) as \"bytes (total)\""
     }
+  },{
+   "name": "rocm.counters",
+   "type": "string",
+   "description": "List of GPU hardware counters to collect"
   }
  ]
 }
