@@ -1,7 +1,7 @@
 Top-down microarchitecture analysis
 =======================================
 
-The top-down microarchitecture analysis method is a hierarchical organization of event-based metrics that identifies the dominant performance bottlenecks in an application. Its aim is to show, on average, how well the CPU's pipeline(s) were being utilized while running an application `[1] https://www.intel.com/content/www/us/en/docs/vtune-profiler/cookbook/2025-4/top-down-microarchitecture-analysis-method.html`_.
+The top-down microarchitecture analysis method is a hierarchical organization of event-based metrics that identifies the dominant performance bottlenecks in an application. Its aim is to show, on average, how well the CPU's pipeline(s) were being utilized while running an application [#0]_.
 
 Caliper supports top-down analysis on Linux for recent Intel CPUs via PAPI or via Linux perf:
 
@@ -77,4 +77,4 @@ Keep the following in mind when designing experiments using the top-down microar
 References
 ---------------------------------------
 
-[1] `Top-down Microarchitecture Analysis Method https://www.intel.com/content/www/us/en/docs/vtune-profiler/cookbook/2025-4/top-down-microarchitecture-analysis-method.html`_
+.. [#0] Intel Top-down Microarchitecture Analysis Method: https://www.intel.com/content/www/us/en/docs/vtune-profiler/cookbook/2025-4/top-down-microarchitecture-analysis-method.html
