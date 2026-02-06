@@ -60,35 +60,28 @@ add_caliper_option(WITH_FORTRAN           "Install Fortran interface" FALSE)
 add_caliper_option(WITH_PYTHON_BINDINGS   "Install Python bindings" FALSE)
 add_caliper_option(WITH_TOOLS             "Build Caliper tools" TRUE)
 
-add_caliper_option(WITH_NVTX      "Enable NVidia nvtx bindings for NVprof and NSight (requires CUDA)" FALSE)
-add_caliper_option(WITH_CUPTI     "Enable CUPTI service (CUDA performance analysis)" FALSE)
-add_caliper_option(WITH_PAPI      "Enable PAPI hardware counter service (requires papi)" FALSE)
-add_caliper_option(WITH_LIBPFM    "Enable libpfm (perf_event) sampling" FALSE)
-add_caliper_option(WITH_LIBDW     "Enable libdw support (for symbollookup service)" FALSE)
-add_caliper_option(WITH_LIBUNWIND "Enable libunwind support (for callpath service)" FALSE)
-add_caliper_option(WITH_MPI       "Enable MPI" FALSE)
-# add_caliper_option(WITH_MPIT      "Enable MPI-T" FALSE)
-add_caliper_option(WITH_OMPT      "Enable OMPT" FALSE)
-add_caliper_option(WITH_SAMPLER   "Enable Linux sampler (x86 and PPC Linux only)" FALSE)
-add_caliper_option(WITH_GOTCHA    "Enable GOTCHA wrapping" ${CALIPER_HAVE_LINUX})
-add_caliper_option(WITH_ROCTX     "Enable AMD RocTX support" FALSE)
-add_caliper_option(WITH_ROCTRACER "Enable AMD RocTracer support" FALSE)
-add_caliper_option(WITH_ROCM      "Enable AMD RocTracer and RocTX support" FALSE)
+add_caliper_option(WITH_NVTX        "Enable NVidia nvtx bindings for NVprof and NSight (requires CUDA)" FALSE)
+add_caliper_option(WITH_CUPTI       "Enable CUPTI service (CUDA performance analysis)" FALSE)
+add_caliper_option(WITH_PAPI        "Enable PAPI hardware counter service (requires papi)" FALSE)
+add_caliper_option(WITH_LIBPFM      "Enable libpfm (perf_event) sampling" FALSE)
+add_caliper_option(WITH_LIBDW       "Enable libdw support (for symbollookup service)" FALSE)
+add_caliper_option(WITH_LIBUNWIND   "Enable libunwind support (for callpath service)" FALSE)
+add_caliper_option(WITH_MPI         "Enable MPI" FALSE)
+# add_caliper_option(WITH_MPIT        "Enable MPI-T" FALSE)
+add_caliper_option(WITH_OMPT        "Enable OMPT" FALSE)
+add_caliper_option(WITH_SAMPLER     "Enable Linux sampler (x86 and PPC Linux only)" FALSE)
+add_caliper_option(WITH_GOTCHA      "Enable GOTCHA wrapping" ${CALIPER_HAVE_LINUX})
+add_caliper_option(WITH_ROCM        "Enable AMD ROCm profiling support (identical to WITH_ROCPROFILER)" FALSE)
 add_caliper_option(WITH_ROCPROFILER "Enable AMD rocprofiler-sdk support" FALSE)
-add_caliper_option(WITH_TAU       "Enable TAU service (TAU Performance System)" FALSE)
-add_caliper_option(WITH_VTUNE     "Enable Intel(R) VTune(tm) annotation bindings" FALSE)
-add_caliper_option(WITH_ADIAK     "Enable adiak support" FALSE)
-add_caliper_option(WITH_KOKKOS    "Enable Kokkos profiling support" TRUE)
-add_caliper_option(WITH_PCP       "Enable performance co-pilot support" FALSE)
-add_caliper_option(WITH_VARIORUM  "Enable Variorum support" FALSE)
-add_caliper_option(WITH_UMPIRE    "Enable Umpire statistics support" FALSE)
-add_caliper_option(WITH_CRAYPAT   "Enable CrayPAT region forwarding support" FALSE)
-add_caliper_option(WITH_LDMS      "Enable LDMS forwarder" FALSE)
-add_caliper_option(WITH_PAPI_RDPMC "Declare that PAPI is built to use rdpmc for reading counters. Does nothing if PAPI support is not enabled." TRUE)
-
-if (WITH_PAPI_RDPMC)
-  set(CALIPER_WITH_PAPI_RDPMC TRUE)
-endif ()
+add_caliper_option(WITH_TAU         "Enable TAU service (TAU Performance System)" FALSE)
+add_caliper_option(WITH_VTUNE       "Enable Intel(R) VTune(tm) annotation bindings" FALSE)
+add_caliper_option(WITH_ADIAK       "Enable adiak support" FALSE)
+add_caliper_option(WITH_KOKKOS      "Enable Kokkos profiling support" TRUE)
+add_caliper_option(WITH_PCP         "Enable performance co-pilot support" FALSE)
+add_caliper_option(WITH_VARIORUM    "Enable Variorum support" FALSE)
+add_caliper_option(WITH_UMPIRE      "Enable Umpire statistics support" FALSE)
+add_caliper_option(WITH_CRAYPAT     "Enable CrayPAT region forwarding support" FALSE)
+add_caliper_option(WITH_LDMS        "Enable LDMS forwarder" FALSE)
 
 set(WITH_ARCH "" CACHE STRING "Enable features specific to the provided archspec CPU architecture name")
 if (NOT WITH_ARCH STREQUAL "")
@@ -152,6 +145,10 @@ else()
   # Disable rpaths
   set(CMAKE_SKIP_RPATH TRUE)
 endif(BUILD_SHARED_LIBS)
+
+# pthread handling
+set(THREADS_PREFER_PTHREAD_FLAG On)
+find_package(Threads REQUIRED)
 
 if (${CALIPER_HAVE_LINUX})
   set(CALIPER_HAVE_CPUINFO TRUE)
@@ -232,12 +229,15 @@ if (WITH_LIBPFM)
     message(STATUS "Found libpfm.so in " ${LIBPFM_LIBRARY})
     set(CALIPER_HAVE_LIBPFM TRUE)
     set(CALIPER_Libpfm_CMAKE_MSG "Yes, using ${LIBPFM_LIBRARY}")
-    list(APPEND CALIPER_EXTERNAL_LIBS ${LIBPFM_LIBRARY})
+    list(APPEND CALIPER_EXTERNAL_LIBS ${LIBPFM_LIBRARY} Threads::Threads)
   else()
+    set(CALIPER_HAVE_LIBPFM FALSE)
     message(WARNING "Libpfm support was requested but libpfm.so was not found!\n"
       "Set -DLIBPFM_INSTALL=<path to libpfm src directory (e.g. -DLIBPFM_INSTALL=~/papi/src/libpfm4)"
       "and re-run cmake")
   endif()
+else()
+  set(CALIPER_HAVE_LIBPFM FALSE)
 endif()
 
 if (WITH_LIBDW)
@@ -309,10 +309,6 @@ if (WITH_KOKKOS)
   set(CALIPER_Kokkos_CMAKE_MSG "Yes")
 endif()
 
-# pthread handling
-set(THREADS_PREFER_PTHREAD_FLAG On)
-find_package(Threads REQUIRED)
-
 if (WITH_OMPT)
   set(CALIPER_HAVE_OMPT TRUE)
   set(CALIPER_OMPT_CMAKE_MSG "Yes")
@@ -340,36 +336,7 @@ if (WITH_MPI)
   endif()
 endif()
 
-if (WITH_ROCPROFILER AND (WITH_ROCTX OR WITH_ROCTRACER))
-  message(WARNING "ROCPROFILER and ROCTX/ROCTRACER support are both enabled.\n"
-    "This is not recommended, please select either ROCPROFILER or ROCTRACER/ROCTX")
-endif()
-
-if (WITH_ROCTX OR WITH_ROCM)
-  include(FindRocTX)
-  if (ROCTX_FOUND)
-    set(CALIPER_HAVE_ROCTX TRUE)
-    set(CALIPER_RocTX_CMAKE_MSG "Yes, using ${ROCTX_LIBRARIES}")
-    list(APPEND CALIPER_EXTERNAL_LIBS ${ROCTX_LIBRARIES})
-  else()
-    message(WARNING "RocTX support requested but ROCm was not found!\n"
-      "Set ROCM_PATH to installation path and re-run cmake.")
-  endif()
-endif()
-
-if (WITH_ROCTRACER OR WITH_ROCM)
-  include(FindRoctracer)
-  if (ROCTRACER_FOUND)
-    set(CALIPER_HAVE_ROCTRACER TRUE)
-    set(CALIPER_RocTracer_CMAKE_MSG "Yes, using ${ROCTRACER_LIBRARIES}")
-    list(APPEND CALIPER_EXTERNAL_LIBS ${ROCTRACER_LIBRARIES})
-  else()
-    message(WARNING "RocTracer support requested but ROCm was not found!\n"
-      "Set ROCM_PATH to installation path and re-run cmake.")
-  endif()
-endif()
-
-if (WITH_ROCPROFILER)
+if (WITH_ROCPROFILER OR WITH_ROCM)
   find_package(rocprofiler-sdk REQUIRED)
   find_package(rocprofiler-sdk-roctx REQUIRED)
   if (rocprofiler-sdk_FOUND)
@@ -379,6 +346,8 @@ if (WITH_ROCPROFILER)
       rocprofiler-sdk-roctx::rocprofiler-sdk-roctx)
     list(APPEND CALIPER_rocprofiler_CMAKE_MSG "Yes, using ${rocprofiler-sdk_ROOT_DIR}")
   endif()
+else()
+  set(CALIPER_HAVE_ROCPROFILER FALSE)
 endif()
 
 if (WITH_CRAYPAT)
@@ -641,8 +610,6 @@ set(CALIPER_MODULES
   Nvtx
   CUpti
   Kokkos
-  RocTracer
-  RocTX
   rocprofiler
   TAU
   VTune

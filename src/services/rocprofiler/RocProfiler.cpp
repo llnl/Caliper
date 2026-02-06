@@ -711,7 +711,6 @@ class RocProfilerService
 public:
 
     static const char* s_spec;
-    static const char* s_roctracer_spec;
 
     static int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
     {
@@ -828,27 +827,6 @@ public:
                         << " Activity tracing is " << (s_instance->m_enable_activity_tracing ? "on" : "off")
                         << std::endl;
     }
-
-    static void register_rocprofiler_as_roctracer(Caliper* c, Channel* channel)
-    {
-        // a compatibility layer to convert roctracer options into rocprofiler options
-
-        Log(1).stream() << channel->name() << ": rocprofiler: Using roctracer compatibility layer.\n";
-
-        auto config = services::init_config_from_spec(channel->config(), s_roctracer_spec);
-
-        bool enable_activity_tracing = config.get("trace_activities").to_bool();
-        bool enable_snapshot_timestamps =
-            config.get("snapshot_duration").to_bool() || config.get("snapshot_timestamps").to_bool();
-
-        channel->config().set("CALI_ROCPROFILER_ENABLE_ACTIVITY_TRACING", enable_activity_tracing ? "true" : "false");
-        channel->config().set(
-            "CALI_ROCPROFILER_ENABLE_SNAPSHOT_TIMESTAMPS",
-            enable_snapshot_timestamps ? "true" : "false"
-        );
-
-        register_rocprofiler(c, channel);
-    }
 };
 
 RocProfilerService* RocProfilerService::s_instance = nullptr;
@@ -895,36 +873,6 @@ const char* RocProfilerService::s_spec = R"json(
 }
 )json";
 
-const char* RocProfilerService::s_roctracer_spec = R"json(
-{
- "name": "roctracer",
- "description": "roctracer compatibility layer for rocprofiler service (deprecated)",
- "config":
- [
-  { "name": "trace_activities",
-    "type": "bool",
-    "description": "Enable ROCm GPU activity tracing",
-    "value": "true"
-  },
-  { "name": "record_kernel_names",
-    "type": "bool",
-    "description": "Record kernel names when activity tracing is enabled",
-    "value": "false"
-  },
-  { "name": "snapshot_duration",
-    "type": "bool",
-    "description": "Record duration of host-side activities using ROCm timestamps",
-    "value": "false"
-  },
-  { "name": "snapshot_timestamps",
-    "type": "bool",
-    "description": "Record host-side timestamps with ROCm",
-    "value": "false"
-   }
-  ]
-}
-)json";
-
 } // namespace
 
 extern "C"
@@ -953,8 +901,5 @@ namespace cali
 {
 
 CaliperService rocprofiler_service { ::RocProfilerService::s_spec, ::RocProfilerService::register_rocprofiler };
-
-CaliperService roctracer_service { ::RocProfilerService::s_roctracer_spec,
-                                   ::RocProfilerService::register_rocprofiler_as_roctracer };
 
 } // namespace cali

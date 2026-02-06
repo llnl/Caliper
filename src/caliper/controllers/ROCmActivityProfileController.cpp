@@ -8,6 +8,8 @@
 
 #include "caliper/common/Log.h"
 
+#include "../../common/StringConverter.h"
+
 #include "../../services/Services.h"
 
 #include <algorithm>
@@ -42,16 +44,16 @@ public:
         }
 
         std::string q_local =
-            " let act_count=first(sum#count,count) if rocm.activity"
-            ",dmin=scale(min#rocm.activity.duration,1e-9)"
+            " let "
+            " dmin=scale(min#rocm.activity.duration,1e-9)"
             ",davg=scale(avg#rocm.activity.duration,1e-9)"
             ",dmax=scale(max#rocm.activity.duration,1e-9)"
-            " select *,scale(sum#time.duration.ns,1e-9) as time"
+            " select *,scale(sum#rocm.host.duration,1e-9) as time"
             ",scale(sum#rocm.activity.duration,1e-9) as \"time (gpu)\""
             ",min(dmin) as \"min time/inst\""
             ",avg(davg) as \"avg time/inst\""
             ",max(dmax) as \"max time/inst\""
-            ",sum(act_count) as count"
+            ",sum(sum#rocm.activity.count) as instances"
             " group by path,rocm.kernel.name,rocm.activity,mpi.rank "
             " format ";
 
@@ -66,6 +68,17 @@ public:
 
         if (opts.is_set("use.mpi"))
             use_mpi = have_mpi && opts.is_enabled("use.mpi");
+
+        if (opts.is_set("rocm.counters")) {
+            auto counters_str = opts.get("rocm.counters");
+            auto counters = StringConverter(counters_str).to_stringlist();
+            int count = 0;
+            for (const auto &str : counters) {
+                q_local.append(count++ == 0 ? " select " : ",");
+                q_local.append("sum(sum#rocm.").append(str).append(") as ").append(str);
+            }
+            config()["CALI_ROCPROFILER_COUNTERS"] = counters_str;
+        }
 
         if (have_adiak) {
             config()["CALI_SERVICES_ENABLE"].append(",adiak_import");
@@ -127,14 +140,13 @@ const char* controller_spec = R"json(
  "name"        : "rocm-activity-profile",
  "description" : "Record AMD ROCm activities and a write profile",
  "categories"  : [ "adiak", "metric", "output", "region", "event" ],
- "services"    : [ "aggregate", "roctracer", "event", "timer" ],
+ "services"    : [ "aggregate", "rocprofiler", "event" ],
  "config"      :
  {
-  "CALI_CHANNEL_FLUSH_ON_EXIT"        : "false",
-  "CALI_EVENT_ENABLE_SNAPSHOT_INFO"   : "false",
-  "CALI_ROCTRACER_TRACE_ACTIVITIES"   : "true",
-  "CALI_ROCTRACER_RECORD_KERNEL_NAMES": "true",
-  "CALI_ROCTRACER_SNAPSHOT_DURATION"  : "false"
+  "CALI_CHANNEL_FLUSH_ON_EXIT": "false",
+  "CALI_EVENT_ENABLE_SNAPSHOT_INFO": "false",
+  "CALI_ROCPROFILER_ENABLE_ACTIVITY_TRACING": "true",
+  "CALI_ROCPROFILER_ENABLE_SNAPSHOT_TIMESTAMPS": "true"
  },
  "defaults"    : { "node.order": "true", "memcpy": "true" },
  "options":
@@ -155,6 +167,10 @@ const char* controller_spec = R"json(
     {
      "local": "select min(min#rocm.bytes) as \"bytes (min)\",max(max#rocm.bytes) as \"bytes (max)\",sum(sum#rocm.bytes) as \"bytes (total)\""
     }
+  },{
+   "name": "rocm.counters",
+   "type": "string",
+   "description": "List of GPU hardware counters to collect"
   }
  ]
 }

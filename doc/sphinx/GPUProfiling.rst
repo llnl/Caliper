@@ -6,6 +6,7 @@ kernel executions and memory copies. This requires Caliper to be built with
 CUpti support (`-DWITH_CUPTI=On`, for CUDA devices) or roctracer support
 (`-DWITH_ROCPROFILER=On`, for AMD devices).
 
+
 Profiling host-side API functions
 ---------------------------------------
 
@@ -33,6 +34,7 @@ enabled. We can see the time spent in CUDA functions like ``cudaMemcpy`` and
             cudaLaunchKernel         0.000418      0.000450      0.000430  0.002588
           cudaLaunchKernel           0.000097      0.000126      0.000106  0.000640
     ...
+
 
 Profiling device-side activities
 ---------------------------------------
@@ -66,16 +68,16 @@ i.e. they represent the total amount of GPU time launched from a Caliper region
 and any region below. Thus, the GPU time values for "timestep_loop" in the
 example above represent the GPU activity time for the entire program.
 
-Note that the `cuda.gputime` and `rocm.gputime` options are more expensive than 
-regular host-side region profiling because they use tracing APIs to record each 
+Note that the `cuda.gputime` and `rocm.gputime` options are more expensive than
+regular host-side region profiling because they use tracing APIs to record each
 GPU activity.
 They are primarily intended for short, dedicated performance profiling experiments.
 
 There are also dedicated configs for examining GPU activities:
 the `cuda-activity-report`, `cuda-activity-profile`, `rocm-activity-report`, and
 `rocm-activity-profile` configs record the time
-spent in CUDA activities (e.g. kernel executions or memory copies) on the 
-device. The GPU times are mapped to the Caliper regions that launched those
+spent in device activities such as kernel executions or memory copies.
+The GPU times are mapped to the Caliper regions that launched those
 GPU activities. The `...-report` options print a human-readable table, while the
 `...-profile` options write a machine-readable .json or .cali file.
 Here is example output for `cuda-activity-report`::
@@ -133,11 +135,12 @@ GPU %
     Fraction of total inclusive GPU time vs. CPU time. Typically
     represents the GPU utilization in the Caliper region.
 
+
 Show GPU kernels
 ---------------------------------------
 
-Use the `show_kernels` option in `cuda-activity-report` to distinguish
-individual CUDA kernels::
+Use the `show_kernels` option in `cuda-activity-report` or `rocm-activity-report` to
+show the GPU kernels by name::
 
     $ CALI_CONFIG=cuda-activity-report,show_kernels lrun -n 4 ./tea_leaf
     Path                        Kernel                                           Avg Host Time Max Host Time Avg GPU Time Max GPU Time GPU %
@@ -164,6 +167,7 @@ We now see the GPU time in each kernel. The display is "inclusive", that is,
 for each Caliper region, we see kernels launched from this region as well as
 all regions below it. Under the top-level region (``timestep_loop``),
 we see the total time spent in each CUDA kernel in the program.
+
 
 Profiling memory copies
 ---------------------------------------
@@ -200,27 +204,39 @@ Copy GPU->CPU (avg)
 Copy GPU->CPU (max)
     Data copied (Megabytes) from GPU to CPU memory. Maximum among MPI ranks.
 
-Profiles in JSON or CALI format
+
+ROCm hardware counter collection
 ---------------------------------------
 
-The `cuda-activity-profile` and `rocm-activity-profile` configs record GPU 
-activities data similar to the corresponding `...-report` options, but write 
-it in machine-readable JSON or Caliper's ".cali" format for processing with
-`cali-query`. By default, it writes the `json-split` format that can be read 
-by Hatchet::
+With ROCm 7 and higher, Caliper can record GPU hardware counters for kernel executions.
+Run ``rocprofv3 -L`` to see a list of available counters.
 
-    $ CALI_CONFIG=cuda-activity-profile lrun -n 4 ./tea_leaf
-    $ ls *.json
-    cuda_profile.json
+The `event-trace`, `rocm-activity-profile`, and `rocm-activity-report` recipes have
+a `rocm.counters` option to select hardware counters to collect. ::
 
-Other formats can be selected with the `output.format` option. Possible
-values:
+    $ CALI_CONFIG=rocm-activity-report,rocm.counters=SQ_WAVES
+    Path                  Host Time GPU Time GPU %    SQ_WAVES
+    main                   0.244918 0.000189 0.077120
+      copy_host2device     0.239564 0.000075 0.031390
+        hipMemcpy          0.239525 0.000075 0.031395
+      hipMalloc            0.000553
+      mainloop             0.001845 0.000041 2.224487
+        square             0.001762 0.000041 2.329253
+          hipLaunchKernel  0.001683 0.000041 2.437957 16384.000000
+      copy_device2host     0.000934 0.000073 7.776636
+        hipMemcpy          0.000925 0.000073 7.850427
 
-cali
-    The Caliper profile/trace format for processing with `cali-query`.
+For other profiling recipes like `spot`, `runtime-report`, and `runtime-profile` it
+is necessary to write a specification for collecting and aggregating a set of counters.
+It should set the ``CALI_ROCPROFILER_COUNTERS`` option to record the required
+counters and specify CalQL queries to aggregate the counter values as needed.
+The ``examples/configs/rocm_counters.json`` file in the Caliper source provides an
+example. It defines a `sq_waves` option to record the SQ_WAVES counter:
 
-hatchet
-    JSON format readable by Hatchet. See :ref:`json-split-format`.
+.. literalinclude:: ../../examples/configs/rocm_counters.json
+   :language: json
 
-json
-    Easy-to-parse list-of-dicts style JSON. See :ref:`json-format`.
+The `sq_waves` option can then be selected after loading the specification file with
+the `load` command::
+
+    $ CALI_CONFIG="load(rocm_counters.json),runtime-report,sq_waves"
