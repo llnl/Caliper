@@ -48,6 +48,27 @@ section_id_stack=()
 section_counter=0
 section_indent=""
 
+# Helper function to print errors in red
+print_error ()
+{
+    local error_msg="${1}"
+    echo -e "\e[31m[Error]: ${error_msg}\e[0m"
+}
+
+# Helper function to print warnings in gray
+print_warning ()
+{
+    local warning_msg="${1}"
+    echo -e "\e[1;30m[Warning]: ${warning_msg}\e[0m"
+}
+
+# Helper function to print information
+print_info ()
+{
+    local info_msg="${1}"
+    echo -e "[Information]: ${info_msg}"
+}
+
 # GitLab CI collapsible section helpers with nesting support
 section_start ()
 {
@@ -58,7 +79,7 @@ section_start ()
     local collapsed="false"
     if [[ "${section_state}" == "collapsed" ]]
     then
-        local collapsed="true"
+        collapsed="true"
     fi
 
     # Generate unique section ID
@@ -89,7 +110,7 @@ section_end ()
 {
     # Pop section ID from stack
     if [[ ${#section_id_stack[@]} -eq 0 ]]; then
-        echo "[Warning]: section_end called with empty stack"
+        print_warning "section_end called with empty stack"
         return 1
     fi
 
@@ -120,10 +141,10 @@ section_end ()
 
 if [[ ${debug_mode} == true ]]
 then
-    echo "[Information]: Debug mode:"
-    echo "[Information]: - Spack debug mode."
-    echo "[Information]: - Deactivated shared memory."
-    echo "[Information]: - Do not push to buildcache."
+    print_info "Debug mode:"
+    print_info "- Spack debug mode."
+    print_info "- Deactivated shared memory."
+    print_info "- Do not push to buildcache."
     use_dev_shm=false
     spack_debug=true
     push_to_registry=false
@@ -131,7 +152,7 @@ fi
 
 if [[ -n ${module_list} ]]
 then
-    echo "[Information]: Loading modules: ${module_list}"
+    print_info "Loading modules: ${module_list}"
     module load ${module_list}
 fi
 
@@ -158,14 +179,14 @@ else
     prefix="${project_dir}/../spack-and-build-root"
 fi
 
-echo "[Information]: Creating directory ${prefix}"
-echo "[Information]: project_dir: ${project_dir}"
+print_info "Creating directory ${prefix}"
+print_info "project_dir: ${project_dir}"
 
 mkdir -p ${prefix}
 
 spack_cmd="${prefix}/spack/bin/spack"
 spack_env_path="${prefix}/spack_env"
-uberenv_cmd="./scripts/uberenv/uberenv.py"
+uberenv_cmd="${project_dir}/scripts/uberenv/uberenv.py"
 if [[ ${spack_debug} == true ]]
 then
     spack_cmd="${spack_cmd} --debug --stacktrace"
@@ -179,7 +200,8 @@ then
 
     if [[ -z ${spec} ]]
     then
-        echo "[Error]: SPEC is undefined, aborting..."
+        section_end
+        print_error "SPEC is undefined, aborting..."
         exit 1
     fi
 
@@ -230,13 +252,13 @@ then
         hostconfig_path=${hostconfigs[0]}
     elif [[ ${#hostconfigs[@]} == 0 ]]
     then
-        echo "[Error]: No result for: ${project_dir}/*.cmake"
-        echo "[Error]: Spack generated host-config not found."
+        print_error "No result for: ${project_dir}/*.cmake"
+        print_error "Spack generated host-config not found."
         exit 1
     else
-        echo "[Error]: More than one result for: ${project_dir}/*.cmake"
-        echo "[Error]: ${hostconfigs[@]}"
-        echo "[Error]: Please specify one with HOST_CONFIG variable"
+        print_error "More than one result for: ${project_dir}/*.cmake"
+        print_error "${hostconfigs[@]}"
+        print_error "Please specify one with HOST_CONFIG variable"
         exit 1
     fi
 else
@@ -245,7 +267,7 @@ else
 fi
 
 hostconfig=$(basename ${hostconfig_path})
-echo "[Information]: Found hostconfig ${hostconfig_path}"
+print_info "Found hostconfig ${hostconfig_path}"
 
 # Build Directory
 # When using /dev/shm, we use prefix for both spack builds and source build, unless BUILD_ROOT was defined
@@ -259,15 +281,15 @@ cmake_exe=`grep 'CMake executable' ${hostconfig_path} | cut -d ':' -f 2 | xargs`
 # Build
 if [[ "${option}" != "--deps-only" && "${option}" != "--test-only" ]]
 then
-    echo "[Information]: Prefix       ${prefix}"
-    echo "[Information]: Host-config  ${hostconfig_path}"
-    echo "[Information]: Build Dir    ${build_dir}"
-    echo "[Information]: Project Dir  ${project_dir}"
-    echo "[Information]: Install Dir  ${install_dir}"
+    print_info "Prefix       ${prefix}"
+    print_info "Host-config  ${hostconfig_path}"
+    print_info "Build Dir    ${build_dir}"
+    print_info "Project Dir  ${project_dir}"
+    print_info "Install Dir  ${install_dir}"
 
     section_start "clean" "Cleaning working directory" "collapsed"
     # Map CPU core allocations
-    declare -A core_counts=(["lassen"]=40 ["dane"]=28 ["matrix"]=28 ["corona"]=32 ["rzansel"]=48 ["tioga"]=32 ["tuolumne"]=48)
+    declare -A core_counts=(["lassen"]=40 ["poodle"]=28 ["dane"]=28 ["matrix"]=28 ["corona"]=32 ["rzansel"]=48 ["tioga"]=32 ["tuolumne"]=48)
 
     # If building, then delete everything first
     # NOTE: 'cmake --build . -j core_counts' attempts to reduce individual build resources.
@@ -296,34 +318,45 @@ then
       -DCMAKE_INSTALL_PREFIX=${install_dir} \
       ${project_dir}
       then
+        status=$?
         section_end
-        echo "[Error]: CMake configuration failed, dumping output..."
+        print_error "CMake configuration failed, dumping output..."
         section_start "cmake_config_verbose" "Verbose CMake Configuration"
         $cmake_exe \
           -C ${hostconfig_path} \
           ${cmake_options} \
           -DCMAKE_INSTALL_PREFIX=${install_dir} \
           ${project_dir} --debug-output --trace-expand
-        section_end
-        exit 1
-      else
-        section_end
+
+        exit ${status}
     fi
+    section_end
 
     section_start "build" "Building Caliper" "collapsed"
     if ! $cmake_exe --build . -j ${core_counts[$truehostname]}
     then
+        status=$?
         section_end
-        echo "[Error]: Compilation failed, building with verbose output..."
-        section_start "build_verbose" "Verbose Rebuild" "collapsed"
+        print_error "Compilation failed, building with verbose output..."
+
+        section_start "build_verbose" "Verbose Rebuild"
         $cmake_exe --build . --verbose -j 1
         section_end
-    else
-        section_end
-        section_start "install" "Installing Caliper" "collapsed"
-        $cmake_exe --install .
-        section_end
+
+        exit ${status}
     fi
+    section_end
+
+    section_start "install" "Installing Caliper" "collapsed"
+    if ! $cmake_exe --install .
+    then
+        status=$?
+        section_end
+        print_error "Installation failed."
+
+        exit ${status}
+    fi
+    section_end
 fi
 
 # Test
@@ -332,18 +365,22 @@ then
 
     if [[ ! -d ${build_dir} ]]
     then
-        echo "[Error]: Build directory not found : ${build_dir}" && exit 1
+        print_error "Build directory not found : ${build_dir}"
+        exit 1
     fi
 
     cd ${build_dir}
 
     section_start "tests" "Running Tests" "collapsed"
     ctest --output-on-failure -T test 2>&1 | tee tests_output.txt
+    ctest_status=${PIPESTATUS[0]}
 
     no_test_str="No tests were found!!!"
     if [[ "$(tail -n 1 tests_output.txt)" == "${no_test_str}" ]]
     then
-        echo "[Error]: No tests were found" && exit 1
+        section_end
+        print_error "No tests were found"
+        exit ${ctest_status}
     fi
 
     tree Testing
@@ -352,7 +389,9 @@ then
 
     if grep -q "Errors while running CTest" ./tests_output.txt
     then
-        echo "[Error]: Failure(s) while running CTest" && exit 1
+        section_end
+        print_error "Failure(s) while running CTest"
+        exit ${ctest_status}
     fi
     section_end
 fi
