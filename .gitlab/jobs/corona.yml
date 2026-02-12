@@ -5,21 +5,41 @@
 # SPDX-License-Identifier: (MIT)
 ##############################################################################
 
+# With GitLab CI, included files cannot be empty.
+variables:
+  INCLUDED_FILE_CANNOT_BE_EMPTY: "True"
+
 # Override reproducer section to define project specific variables.
 .corona_reproducer_vars:
   script:
     - !reference [.reproducer_vars, script]
 
-# With GitLab CI, included files cannot be empty.
-variables:
-  INCLUDED_FILE_CANNOT_BE_EMPTY: "True"
+########################
+# Overridden shared jobs
+########################
+# We duplicate the shared jobs description and add necessary changes for this
+# project. We keep ${PROJECT_<MACHINE>_VARIANTS} and ${PROJECT_<MACHINE>_DEPS}
+# when possible so that the comparison with the original job is easier.
 
-# The correct way is now to use llvm-amdgpu compiler directly as done in shared spec
-### Template for extra jobs defined by the project.
-#clang14.0.6-rocm5.4.1:
-#  variables:
-#    SPEC: "%llvm@14.0.6 +rocm amdgpu_target=gfx906 ^hip@5.4.1 "
-#  extends: .job_on_corona
+# rocm@:6.2.3 is not supported by Caliper anymore.
+# Caliper depends on rocprofiler-sdk which requires rocm@6.2.4:
+rocmcc_5_7_1_hip:
+  extends: .job_on_corona
+  variables:
+    ON_CORONA: "OFF"
+
+############
+# Extra jobs
+############
+# We do not recommend using ${PROJECT_<MACHINE>_VARIANTS} and
+# ${PROJECT_<MACHINE>_DEPS} in the extra jobs. There is no reason not to fully
+# describe the spec here.
+
+rocmcc_6_4_2_hip:
+  variables:
+    SPEC: "${PROJECT_CORONA_VARIANTS} +rocm amdgpu_target=gfx906 %llvm-amdgpu@=6.4.2 ^hip@6.4.2 ${PROJECT_CORONA_DEPS}"
+  extends: .job_on_corona
+  allow_failure: true
 
 master:
   variables:
