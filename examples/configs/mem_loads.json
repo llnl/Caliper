@@ -1,0 +1,28 @@
+{"options":
+[
+{
+    "name": "papi.mem_loads",
+    "category": "metric",
+    "description": "Load cache hits (using PAPI)",
+    "services": [ "papi" ],
+    "config": { "CALI_PAPI_COUNTERS": "MEM_LOAD_RETIRED:FB_HIT,MEM_LOAD_RETIRED:L1_HIT,MEM_LOAD_RETIRED:L2_HIT,MEM_LOAD_RETIRED:L3_HIT,MEM_LOAD_RETIRED:L3_MISS", "CALI_PAPI_ENABLE_MULTIPLEXING": "true" },
+    "query":
+    {
+        "local": "let fb_hit=first(sum#papi.MEM_LOAD_RETIRED:FB_HIT,papi.MEM_LOAD_RETIRED:FB_HIT),l1_hit=first(sum#papi.MEM_LOAD_RETIRED:L1_HIT,papi.MEM_LOAD_RETIRED:L1_HIT),l2_hit=first(sum#papi.MEM_LOAD_RETIRED:L2_HIT,papi.MEM_LOAD_RETIRED:L2_HIT),l3_hit=first(sum#papi.MEM_LOAD_RETIRED:L3_HIT,papi.MEM_LOAD_RETIRED:L3_HIT),l3_miss=first(sum#papi.MEM_LOAD_RETIRED:L3_MISS,papi.MEM_LOAD_RETIRED:L3_MISS),tot_mem_loads=sum(fb_hit,l1_hit,l2_hit,l3_hit,l3_miss) select ratio(fb_hit,tot_mem_loads,100.0) as \"LFB hit\",ratio(l1_hit,tot_mem_loads,100.0) as \"L1 hit\",ratio(l2_hit,tot_mem_loads,100.0) as \"L2 hit\",ratio(l3_hit,tot_mem_loads,100.0) as \"L3 hit\",ratio(l3_miss,tot_mem_loads,100.0) as \"L3 miss\"",
+        "cross": "select avg(ratio#fb_hit/tot_mem_loads) as \"LFB hit\",avg(ratio#l1_hit/tot_mem_loads) as \"L1 hit\",avg(ratio#l2_hit/tot_mem_loads) as \"L2 hit\",avg(ratio#l3_hit/tot_mem_loads) as \"L3 hit\",avg(ratio#l3_miss/tot_mem_loads) as \"L3 miss\""
+    }
+},
+{
+    "name": "perf.mem_loads",
+    "category": "metric",
+    "description": "Load cache hits (using perf)",
+    "services": [ "libpfm" ],
+    "config": { "CALI_LIBPFM_EVENTS": "MEM_LOAD_RETIRED:FB_HIT,MEM_LOAD_RETIRED:L1_HIT,MEM_LOAD_RETIRED:L2_HIT,MEM_LOAD_RETIRED:L3_HIT,MEM_LOAD_RETIRED:L3_MISS", "CALI_LIBPFM_ENABLE_SAMPLING": "false" },
+    "query":
+    {
+        "local": "let fb_hit=first(sum#libpfm.counter.MEM_LOAD_RETIRED:FB_HIT,libpfm.counter.MEM_LOAD_RETIRED:FB_HIT),l1_hit=first(sum#libpfm.counter.MEM_LOAD_RETIRED:L1_HIT,libpfm.counter.MEM_LOAD_RETIRED:L1_HIT),l2_hit=first(sum#libpfm.counter.MEM_LOAD_RETIRED:L2_HIT,libpfm.counter.MEM_LOAD_RETIRED:L2_HIT),l3_hit=first(sum#libpfm.counter.MEM_LOAD_RETIRED:L3_HIT,libpfm.counter.MEM_LOAD_RETIRED:L3_HIT),l3_miss=first(sum#libpfm.counter.MEM_LOAD_RETIRED:L3_MISS,libpfm.counter.MEM_LOAD_RETIRED:L3_MISS),tot_mem_loads=sum(fb_hit,l1_hit,l2_hit,l3_hit,l3_miss) select ratio(fb_hit,tot_mem_loads,100.0) as \"LFB hit\",ratio(l1_hit,tot_mem_loads,100.0) as \"L1 hit\",ratio(l2_hit,tot_mem_loads,100.0) as \"L2 hit\",ratio(l3_hit,tot_mem_loads,100.0) as \"L3 hit\",ratio(l3_miss,tot_mem_loads,100.0) as \"L3 miss\"",
+        "cross": "select avg(ratio#fb_hit/tot_mem_loads) as \"LFB hit\",avg(ratio#l1_hit/tot_mem_loads) as \"L1 hit\",avg(ratio#l2_hit/tot_mem_loads) as \"L2 hit\",avg(ratio#l3_hit/tot_mem_loads) as \"L3 hit\",avg(ratio#l3_miss/tot_mem_loads) as \"L3 miss\""
+    }
+}
+]
+}
