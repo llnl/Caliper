@@ -82,9 +82,12 @@ public:
         CalQLParser parser(config.get("config").to_string().c_str());
 
         if (parser.error()) {
-            Log(0).stream() << channel->name() << ": Report: config parse error: " << parser.error_msg() << std::endl;
+            Log(0).stream() << channel->name() << ": report: config parse error: " << parser.error_msg() << std::endl;
             return;
         }
+
+        if (Log::verbosity() >= 3)
+            Log(3).stream() << channel->name() << ": report: query: " << parser.spec() << std::endl;
 
         Report* instance = new Report(parser.spec(), config);
 
