@@ -119,6 +119,11 @@ public:
                 return;
             }
 
+        if (Log::verbosity() >= 3) {
+            Log(3).stream() << chn->name() << ": mpireport: local query: " << local_parser.spec() << std::endl;
+            Log(3).stream() << chn->name() << ": mpireport: cross query: " << cross_parser.spec() << std::endl;
+        }
+
         MpiReport* instance = new MpiReport(
             cross_parser.spec(),
             local_parser.spec(),
