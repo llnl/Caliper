@@ -79,7 +79,7 @@ class PapiService
 
     static int s_num_instances;
 
-    bool setup_event_info(Caliper* c, const std::vector<std::string>& eventlist)
+    bool setup_event_info(Caliper* c, const std::string& channel_name, const std::vector<std::string>& eventlist)
     {
         m_event_groups.clear();
 
@@ -87,7 +87,7 @@ class PapiService
 
         for (auto& name : eventlist) {
             if (count >= MAX_COUNTERS) {
-                Log(0).stream() << "papi: Maximum number of counters reached, skipping " << name << std::endl;
+                Log(0).stream() << channel_name << ": papi: Maximum number of counters reached, skipping " << name << std::endl;
                 continue;
             }
 
@@ -97,7 +97,7 @@ class PapiService
             strncpy(namebuf, name.c_str(), 1023);
 
             if (PAPI_query_named_event(namebuf) != PAPI_OK) {
-                Log(0).stream() << "papi: Unknown event " << namebuf << std::endl;
+                Log(0).stream() << channel_name << ": papi: Unknown event " << namebuf << std::endl;
                 continue;
             }
 
@@ -132,7 +132,7 @@ class PapiService
             }
 
             if (type == CALI_TYPE_INV) {
-                Log(0).stream() << "papi: Unsupported datatype for event " << name << std::endl;
+                Log(0).stream() << channel_name << ": papi: Unsupported datatype for event " << name << std::endl;
                 continue;
             }
 
@@ -161,16 +161,16 @@ class PapiService
 
         bool all_found = (static_cast<int>(eventlist.size()) == count);
 
-        Log(2).stream() << "papi: Found " << count << " event codes for " << m_event_groups.size()
+        Log(2).stream() << channel_name << ": papi: Found " << count << " event codes for " << m_event_groups.size()
                         << " PAPI component(s)" << std::endl;
 
         if (!all_found)
-            Log(0).stream() << "papi: Unable to process all requested counters" << std::endl;
+            Log(0).stream() << channel_name << ": papi: Unable to process all requested counters" << std::endl;
 
         return all_found;
     }
 
-    bool setup_thread_eventsets(Caliper* c)
+    bool setup_thread_eventsets(Caliper* c, const std::string& channel_name)
     {
         std::map<int, std::shared_ptr<event_group_t>> eventsets;
         bool                                          ok = true;
@@ -179,8 +179,9 @@ class PapiService
             const PAPI_component_info_t* cpi = PAPI_get_component_info(p.first);
 
             if (Log::verbosity() >= 2) {
-                Log(2).stream() << "papi: Creating eventset with " << p.second->codes.size() << " events for component "
-                                << p.first << " (" << (cpi ? cpi->name : "UKNOWN COMPONENT") << ")" << std::endl;
+                Log(2).stream() << channel_name << ": papi: Creating eventset with " << p.second->codes.size()
+                    << " events for component "
+                    << p.first << " (" << (cpi ? cpi->name : "UKNOWN COMPONENT") << ")" << std::endl;
             }
 
             int eventset = PAPI_NULL;
@@ -196,8 +197,8 @@ class PapiService
 
             if (m_enable_multiplex) {
                 if (Log::verbosity() >= 2)
-                    Log(2).stream() << "papi: Initializing multiplex support for component " << p.first << " ("
-                                    << cpi->name << ")" << std::endl;
+                    Log(2).stream() << channel_name << ": papi: Initializing multiplex support for component "
+                        << p.first << " (" << cpi->name << ")" << std::endl;
 
                 ret = PAPI_assign_eventset_component(eventset, p.first);
                 if (ret != PAPI_OK)
@@ -375,7 +376,7 @@ class PapiService
 
     void finish(Caliper* c, Channel* channel)
     {
-        Log(1).stream() << channel->name() << ": papi: Finishing" << std::endl;
+        Log(2).stream() << channel->name() << ": papi: Finishing" << std::endl;
 
         finish_thread_eventsets(c);
 
@@ -410,7 +411,7 @@ class PapiService
         );
     }
 
-    static bool init_papi_library(bool use_multiplex)
+    static bool init_papi_library(bool use_multiplex, const std::string& channel_name)
     {
         if (PAPI_is_initialized() == PAPI_THREAD_LEVEL_INITED)
             return true;
@@ -418,32 +419,38 @@ class PapiService
         int ret = PAPI_library_init(PAPI_VER_CURRENT);
 
         if (ret != PAPI_VER_CURRENT && ret > 0) {
-            Log(0).stream() << "papi: PAPI version mismatch: found " << ret << ", expected " << PAPI_VER_CURRENT
+            Log(0).stream() << channel_name << ": papi: PAPI version mismatch: found " << ret << ", expected " << PAPI_VER_CURRENT
                             << std::endl;
             return false;
         }
 
         if (use_multiplex) {
-            Log(2).stream() << "papi: Enabling multiplexing\n";
+            Log(2).stream() << channel_name << ": papi: Enabling multiplexing\n";
             PAPI_multiplex_init();
         } else {
-            Log(2).stream() << "papi: Disabling multiplexing\n";
+            Log(2).stream() << channel_name << ": papi: Multiplexing disabled\n";
         }
+
+        Log(2).stream() << channel_name << ": papi: Using PAPI version "
+            << PAPI_VERSION_MAJOR(PAPI_VERSION) << "."
+            << PAPI_VERSION_MINOR(PAPI_VERSION) << "."
+            << PAPI_VERSION_REVISION(PAPI_VERSION) << "."
+            << PAPI_VERSION_INCREMENT(PAPI_VERSION) << "\n";
 
         PAPI_thread_init(pthread_self);
 
         if (PAPI_is_initialized() == PAPI_NOT_INITED) {
-            Log(0).stream() << "papi: PAPI library could not be initialized" << std::endl;
+            Log(0).stream() << channel_name << ": papi: PAPI library could not be initialized" << std::endl;
             return false;
         }
 
         return true;
     }
 
-    static void finish_papi_library()
+    static void finish_papi_library(const std::string& channel_name)
     {
         if (--s_num_instances == 0) {
-            Log(1).stream() << "papi: Shutdown" << std::endl;
+            Log(2).stream() << channel_name << ": papi: Shutdown" << std::endl;
             PAPI_shutdown();
         }
     }
@@ -473,7 +480,7 @@ public:
             return;
         }
 
-        if (!init_papi_library(use_multiplex)) {
+        if (!init_papi_library(use_multiplex, channel->name())) {
             Log(0).stream() << channel->name() << ": papi: PAPI library not initialized, dropping papi service"
                             << std::endl;
             return;
@@ -482,19 +489,19 @@ public:
         ++s_num_instances;
         PapiService* instance = new PapiService(c, channel, use_multiplex);
 
-        if (!(instance->setup_event_info(c, eventlist) && instance->setup_thread_eventsets(c))) {
+        if (!(instance->setup_event_info(c, channel->name(), eventlist) && instance->setup_thread_eventsets(c, channel->name()))) {
             Log(0).stream() << channel->name() << ": papi: Failed to initialize event sets, dropping papi service"
                             << std::endl;
 
-            finish_papi_library();
+            finish_papi_library(channel->name());
             delete instance;
             return;
         }
 
         channel->events().post_init_evt.connect([instance](Caliper* c, Channel*) { instance->start_thread_counting(c); }
         );
-        channel->events().create_thread_evt.connect([instance](Caliper* c, Channel*) {
-            if (instance->setup_thread_eventsets(c))
+        channel->events().create_thread_evt.connect([instance](Caliper* c, Channel* channel) {
+            if (instance->setup_thread_eventsets(c, channel->name()))
                 instance->start_thread_counting(c);
         });
         channel->events().release_thread_evt.connect([instance](Caliper* c, Channel*) {
@@ -505,7 +512,7 @@ public:
         });
         channel->events().finish_evt.connect([instance](Caliper* c, Channel* channel) {
             instance->finish(c, channel);
-            finish_papi_library();
+            finish_papi_library(channel->name());
             delete instance;
         });
 
