@@ -211,6 +211,12 @@ int main(int argc, const char* argv[])
     if (files.empty())
         files.push_back(""); // read from stdin if no files are given
 
+    {
+        std::ostringstream osstr;
+        osstr << spec;
+        cali_set_global_string_byname("cali-query.query", osstr.str().c_str());
+    }
+
     CALI_MARK_END("Initialization");
 
     //

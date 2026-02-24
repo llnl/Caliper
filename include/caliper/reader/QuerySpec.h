@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
@@ -133,5 +134,7 @@ struct QuerySpec {
     /// \brief List of preprocessing operations (i.e., "LET y=f(x)")
     std::vector<PreprocessSpec> preprocess_ops;
 };
+
+std::ostream& operator<< (std::ostream&, const cali::QuerySpec&);
 
 } // namespace cali
