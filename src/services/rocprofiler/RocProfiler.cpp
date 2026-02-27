@@ -24,6 +24,9 @@
 #if ROCPROFILER_VERSION_MAJOR >= 1
 #define CALI_ROCPROFILER_HAVE_COUNTERS
 #endif
+#if (ROCPROFILER_VERSION_MAJOR >= 1) || ((ROCPROFILER_VERSION_MAJOR == 0) && (ROCPROFILER_VERSION_MINOR >=6))
+#define CALI_ROCPROFILER_HAVE_ALLOC_TRACING
+#endif
 
 using namespace cali;
 
@@ -457,6 +460,7 @@ class RocProfilerService
         }
     }
 
+#ifdef CALI_ROCPROFILER_HAVE_ALLOC_TRACING
     static void mem_alloc_callback(
         rocprofiler_callback_tracing_record_t record,
         rocprofiler_user_data_t* /* user_data */,
@@ -478,6 +482,7 @@ class RocProfilerService
             c.memory_region_end(data->address.ptr);
         }
     }
+#endif
 
 #ifdef CALI_ROCPROFILER_HAVE_COUNTERS
     static void dispatch_counter_config_callback(
@@ -736,6 +741,7 @@ public:
             tool_api_callback,
             nullptr
         ));
+#ifdef CALI_ROCPROFILER_HAVE_ALLOC_TRACING
         ROCPROFILER_CALL(rocprofiler_configure_callback_tracing_service(
             s_alloc_tracing_ctx,
             ROCPROFILER_CALLBACK_TRACING_MEMORY_ALLOCATION,
@@ -744,6 +750,7 @@ public:
             mem_alloc_callback,
             nullptr
         ));
+#endif
 
         ROCPROFILER_CALL(rocprofiler_create_buffer(
             s_activity_ctx,
@@ -809,6 +816,8 @@ public:
         if (s_instance) {
             Log(0).stream() << channel->name() << ": rocprofiler service is already active, disabling!" << std::endl;
         }
+
+        Log(2).stream() << channel->name() << ": rocprofiler: Using rocprofiler-sdk " << ROCPROFILER_VERSION_STRING << std::endl;
 
         s_instance = new RocProfilerService(c, channel);
 
