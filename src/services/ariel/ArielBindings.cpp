@@ -12,8 +12,6 @@
 #include "caliper/common/Variant.h"
 
 #include <arielapi.h>
-
-#include <stack>
 #include <inttypes.h>
 
 using namespace cali;
