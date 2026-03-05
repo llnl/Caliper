@@ -21,13 +21,6 @@ if (ARIELAPI_LIBRARY)
 	get_filename_component(ARIELAPI_LIBDIR ${ARIELAPI_LIBRARY} DIRECTORY)
 endif ()
 
-#find_path(ARIELAPI_LIBDIR
-#	NAMES
-#	libarielapi.so
-#	PATHS
-	#	"${SST_ELEMENTS_INSTALL}/lib/sst-elements-library" # Spack Location
-	#"${SST_ELEMENTS_ROOT}/src/sst/elements/ariel/api")
-	#
 find_path(ARIELAPI_INCLUDE_DIR
 	NAMES
 	arielapi.h
