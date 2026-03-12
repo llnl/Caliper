@@ -21,6 +21,12 @@ variables:
 # project. We keep ${PROJECT_<MACHINE>_VARIANTS} and ${PROJECT_<MACHINE>_DEPS}
 # So that the comparison with the original job is easier.
 
+# Override the rocm 6.4.3 job to enforce preference/requirement on compiler
+rocmcc_6_4_3_hip:
+  variables:
+    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} +rocm amdgpu_target=gfx942 %%llvm-amdgpu@=6.4.3 ^hip@6.4.3 ${PROJECT_TUOLUMNE_DEPS}"
+  extends: .job_on_tuolumne
+
 ############
 # Extra jobs
 ############
