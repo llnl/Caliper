@@ -136,10 +136,11 @@ const char* controller_spec = R"json(
  "services"    : [ "aggregate", "rocprofiler", "event" ],
  "config"      :
  {
-  "CALI_CHANNEL_FLUSH_ON_EXIT"      : "false",
-  "CALI_EVENT_ENABLE_SNAPSHOT_INFO" : "false",
-  "CALI_ROCPROFILER_ENABLE_ACTIVITY_TRACING"    : "true",
-  "CALI_ROCPROFILER_ENABLE_SNAPSHOT_TIMESTAMPS" : "true"
+  "CALI_CHANNEL_FLUSH_ON_EXIT": "false",
+  "CALI_EVENT_ENABLE_SNAPSHOT_INFO": "false",
+  "CALI_ROCPROFILER_ENABLE_API_CALLBACKS": "true",
+  "CALI_ROCPROFILER_ENABLE_ACTIVITY_TRACING": "true",
+  "CALI_ROCPROFILER_ENABLE_SNAPSHOT_TIMESTAMPS": "true"
  },
  "defaults": { "order_as_visited": "true", "output.append": "true" },
  "options":

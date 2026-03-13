@@ -918,7 +918,7 @@ const char* RocProfilerService::s_spec = R"json(
   { "name": "enable_api_callbacks",
     "type": "bool",
     "description": "Enable HIP API interception callbacks",
-    "value": "true"
+    "value": "false"
   },
   { "name": "enable_marker_callbacks",
     "type": "bool",
