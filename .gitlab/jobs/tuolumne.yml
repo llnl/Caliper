@@ -21,14 +21,11 @@ variables:
 # project. We keep ${PROJECT_<MACHINE>_VARIANTS} and ${PROJECT_<MACHINE>_DEPS}
 # So that the comparison with the original job is easier.
 
-# This compiler is not considered reliable per issue in RAJA
-# https://github.com/LLNL/RAJA/pull/1712#issuecomment-2316335119
-# We allow failure and use another of cce in the jobs below.
-cce_18_0_1:
+# Override the rocm 6.4.3 job to enforce preference/requirement on compiler
+rocmcc_6_4_3_hip:
   variables:
-    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} %cce@=18.0.1 ${PROJECT_TUOLUMNE_DEPS}"
+    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} +rocm amdgpu_target=gfx942 %%llvm-amdgpu@=6.4.3 ^hip@6.4.3 ${PROJECT_TUOLUMNE_DEPS}"
   extends: .job_on_tuolumne
-  allow_failure: true
 
 ############
 # Extra jobs
@@ -39,13 +36,13 @@ cce_18_0_1:
 # The correct way is now to use llvm-amdgpu compiler directly as done in shared spec
 
 # As long as cce 18 fails, we keep this one.
-cce_19_0_0:
+cce_21_0_0:
   variables:
-    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} %cce@=19.0.0 ${PROJECT_TUOLUMNE_DEPS}"
+    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} %cce@=21.0.0 ${PROJECT_TUOLUMNE_DEPS}"
   extends: .job_on_tuolumne
 
 # TODO: update cce when vetted
 master:
   variables:
-    SPEC: " +tests %cce@19.0.0"
+    SPEC: " +tests %cce@21.0.0"
   extends: .job_on_tuolumne

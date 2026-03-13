@@ -28,6 +28,7 @@ rocmcc_5_7_1_hip:
   variables:
     ON_CORONA: "OFF"
 
+
 ############
 # Extra jobs
 ############
