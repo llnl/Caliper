@@ -40,6 +40,12 @@ const char* event_trace_spec = R"json(
    "type": "bool",
    "services": [ "cupti" ]
   },{
+   "name": "trace.hip",
+   "description": "Trace CUDA API events",
+   "type": "bool",
+   "services": [ "rocprofiler" ],
+   "config": { "CALI_ROCPROFILER_ENABLE_API_CALLBACKS": "true" }
+  },{
    "name": "trace.openmp",
    "description": "Trace OpenMP events",
    "type": "bool",
@@ -703,6 +709,14 @@ const char* builtin_rocm_option_specs = R"json(
  "category": "region",
  "services": [ "rocprofiler" ],
  "config": { "CALI_ROCPROFILER_ENABLE_API_CALLBACKS": "true" }
+},
+{
+ "name": "profile.roctx",
+ "type": "bool",
+ "description": "Profile roctx markers",
+ "category": "region",
+ "services": [ "rocprofiler" ],
+ "config": { "CALI_ROCPROFILER_ENABLE_MARKER_CALLBACKS": "true" }
 },
 {
  "name": "rocm.gputime",
