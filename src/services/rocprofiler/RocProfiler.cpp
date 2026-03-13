@@ -622,22 +622,14 @@ class RocProfilerService
 
     void pre_finish_cb(Caliper* c, Channel* channel)
     {
-        int status = 0;
-        ROCPROFILER_CALL(rocprofiler_context_is_active(s_hip_api_ctx, &status));
-        if (status)
-            ROCPROFILER_CALL(rocprofiler_stop_context(s_hip_api_ctx));
-        ROCPROFILER_CALL(rocprofiler_context_is_active(s_marker_ctx, &status));
-        if (status)
-            ROCPROFILER_CALL(rocprofiler_stop_context(s_marker_ctx));
-        ROCPROFILER_CALL(rocprofiler_context_is_active(s_rocprofiler_ctx, &status));
-        if (status)
-            ROCPROFILER_CALL(rocprofiler_stop_context(s_rocprofiler_ctx));
-        ROCPROFILER_CALL(rocprofiler_context_is_active(s_activity_ctx, &status));
-        if (status)
-            ROCPROFILER_CALL(rocprofiler_stop_context(s_activity_ctx));
-        ROCPROFILER_CALL(rocprofiler_context_is_active(s_counter_ctx, &status));
-        if (status)
-            ROCPROFILER_CALL(rocprofiler_stop_context(s_counter_ctx));
+        auto contexts = make_array(s_hip_api_ctx, s_marker_ctx, s_rocprofiler_ctx, s_activity_ctx, s_alloc_tracing_ctx, s_counter_ctx);
+
+        for (auto &ctx : contexts) {
+            int status = 0;
+            ROCPROFILER_CALL(rocprofiler_context_is_active(ctx, &status));
+            if (status)
+                ROCPROFILER_CALL(rocprofiler_stop_context(ctx));
+        }
 
         Log(1).stream() << channel->name() << ": rocprofiler: wrote " << m_num_activity_records
             << " activity records, " << m_num_counter_records << " counter records.\n";
