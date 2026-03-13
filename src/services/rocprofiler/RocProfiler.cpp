@@ -71,6 +71,7 @@ auto make_array(Arg arg, Args&&... args)
 class RocProfilerService
 {
     Attribute m_api_attr;
+    Attribute m_marker_attr;
 
     Attribute m_kernel_name_attr;
 
@@ -95,6 +96,7 @@ class RocProfilerService
     Attribute m_flush_region_attr;
 
     bool m_enable_api_callbacks       = false;
+    bool m_enable_marker_callbacks    = false;
     bool m_enable_activity_tracing    = false;
     bool m_enable_snapshot_timestamps = false;
     bool m_enable_allocation_tracing  = false;
@@ -129,6 +131,7 @@ class RocProfilerService
     static RocProfilerService* s_instance;
 
     static rocprofiler_context_id_t s_hip_api_ctx;
+    static rocprofiler_context_id_t s_marker_ctx;
     static rocprofiler_context_id_t s_activity_ctx;
     static rocprofiler_context_id_t s_rocprofiler_ctx;
     static rocprofiler_context_id_t s_alloc_tracing_ctx;
@@ -142,6 +145,7 @@ class RocProfilerService
         Variant   v_true(true);
 
         m_api_attr = c->create_attribute("rocm.api", CALI_TYPE_STRING, CALI_ATTR_NESTED, 1, &subs_attr, &v_true);
+        m_marker_attr = c->create_attribute("rocm.marker", CALI_TYPE_STRING, CALI_ATTR_NESTED, 1, &subs_attr, &v_true);
 
         m_activity_start_attr =
             c->create_attribute("rocm.starttime", CALI_TYPE_UINT, CALI_ATTR_ASVALUE | CALI_ATTR_SKIP_EVENTS);
@@ -425,7 +429,25 @@ class RocProfilerService
         c.end(s_instance->m_flush_region_attr);
     }
 
-    static void tool_api_callback(
+    static void code_obj_callback(
+        rocprofiler_callback_tracing_record_t record,
+        rocprofiler_user_data_t*              user_data,
+        void* /* callback_data */
+    )
+    {
+        if (!s_instance)
+            return;
+        if (record.kind != ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT)
+            return;
+
+        if (record.operation == ROCPROFILER_CODE_OBJECT_DEVICE_KERNEL_SYMBOL_REGISTER &&
+            record.phase == ROCPROFILER_CALLBACK_PHASE_LOAD) {
+            auto* data = static_cast<rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t*>(record.payload);
+            s_instance->update_kernel_info(data->kernel_id, util::demangle(data->kernel_name));
+        }
+    }
+
+    static void hip_api_callback(
         rocprofiler_callback_tracing_record_t record,
         rocprofiler_user_data_t*              user_data,
         void* /* callback_data */
@@ -434,28 +456,45 @@ class RocProfilerService
         if (!s_instance)
             return;
 
-        if (record.kind == ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT) {
-            if (record.operation == ROCPROFILER_CODE_OBJECT_DEVICE_KERNEL_SYMBOL_REGISTER
-                && record.phase == ROCPROFILER_CALLBACK_PHASE_LOAD) {
-                auto* data =
-                    static_cast<rocprofiler_callback_tracing_code_object_kernel_symbol_register_data_t*>(record.payload
-                    );
-                s_instance->update_kernel_info(data->kernel_id, util::demangle(data->kernel_name));
+        if (record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER) {
+            const char* name = nullptr;
+            uint64_t    len  = 0;
+            ROCPROFILER_CALL(
+                rocprofiler_query_callback_tracing_kind_operation_name(record.kind, record.operation, &name, &len)
+            );
+            if (!name) {
+                name = "UNKNOWN";
+                len  = 7;
             }
-        } else {
-            if (record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER) {
-                const char* name = nullptr;
-                uint64_t    len  = 0;
-                ROCPROFILER_CALL(
-                    rocprofiler_query_callback_tracing_kind_operation_name(record.kind, record.operation, &name, &len)
-                );
-                if (!name) {
-                    name = "UNKNOWN";
-                    len  = 7;
+            Caliper::instance().begin(s_instance->m_api_attr, Variant(CALI_TYPE_STRING, name, len));
+        } else if (record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT) {
+            Caliper::instance().end(s_instance->m_api_attr);
+        }
+    }
+
+    static void marker_callback(
+        rocprofiler_callback_tracing_record_t record,
+        rocprofiler_user_data_t*              user_data,
+        void* /* callback_data */
+    )
+    {
+        if (!s_instance)
+            return;
+
+        if (record.kind == ROCPROFILER_CALLBACK_TRACING_MARKER_CORE_API &&
+            record.phase == ROCPROFILER_CALLBACK_PHASE_ENTER) {
+            switch (record.operation) {
+            case ROCPROFILER_MARKER_CORE_API_ID_roctxRangePushA:
+                {
+                    const auto *data = static_cast<const rocprofiler_callback_tracing_marker_api_data_t*>(record.payload);
+                    Caliper::instance().begin(s_instance->m_marker_attr, Variant(data->args.roctxRangePushA.message));
                 }
-                Caliper::instance().begin(s_instance->m_api_attr, Variant(CALI_TYPE_STRING, name, len));
-            } else if (record.phase == ROCPROFILER_CALLBACK_PHASE_EXIT) {
-                Caliper::instance().end(s_instance->m_api_attr);
+                break;
+            case ROCPROFILER_MARKER_CORE_API_ID_roctxRangePop:
+                Caliper::instance().end(s_instance->m_marker_attr);
+                break;
+            default:
+                break;
             }
         }
     }
@@ -532,19 +571,29 @@ class RocProfilerService
         if (m_enable_api_callbacks) {
             channel->events().subscribe_attribute(c, m_api_attr);
             ROCPROFILER_CALL(rocprofiler_start_context(s_hip_api_ctx));
+            Log(2).stream() << channel->name() << ": rocprofiler: HIP API callbacks activated\n";
+        }
+
+        if (m_enable_marker_callbacks) {
+            channel->events().subscribe_attribute(c, m_marker_attr);
+            ROCPROFILER_CALL(rocprofiler_start_context(s_marker_ctx));
+            Log(2).stream() << channel->name() << ": rocprofiler: marker callbacks activated\n";
         }
 
         if (m_enable_activity_tracing) {
             ROCPROFILER_CALL(rocprofiler_start_context(s_rocprofiler_ctx));
             ROCPROFILER_CALL(rocprofiler_start_context(s_activity_ctx));
+            Log(2).stream() << channel->name() << ": rocprofiler: activity tracing activated\n";
         }
 
         if (m_enable_allocation_tracing) {
             ROCPROFILER_CALL(rocprofiler_start_context(s_alloc_tracing_ctx));
+            Log(2).stream() << channel->name() << ": rocprofiler: allocation tracking activated\n";
         }
 
         if (m_enable_counters) {
             ROCPROFILER_CALL(rocprofiler_start_context(s_counter_ctx));
+            Log(2).stream() << channel->name() << ": rocprofiler: counter tracing activated\n";
         }
 
         if (m_enable_activity_tracing || m_enable_counters) {
@@ -577,6 +626,9 @@ class RocProfilerService
         ROCPROFILER_CALL(rocprofiler_context_is_active(s_hip_api_ctx, &status));
         if (status)
             ROCPROFILER_CALL(rocprofiler_stop_context(s_hip_api_ctx));
+        ROCPROFILER_CALL(rocprofiler_context_is_active(s_marker_ctx, &status));
+        if (status)
+            ROCPROFILER_CALL(rocprofiler_stop_context(s_marker_ctx));
         ROCPROFILER_CALL(rocprofiler_context_is_active(s_rocprofiler_ctx, &status));
         if (status)
             ROCPROFILER_CALL(rocprofiler_stop_context(s_rocprofiler_ctx));
@@ -677,6 +729,7 @@ class RocProfilerService
         auto config = services::init_config_from_spec(channel->config(), s_spec);
 
         m_enable_api_callbacks       = config.get("enable_api_callbacks").to_bool();
+        m_enable_marker_callbacks    = config.get("enable_marker_callbacks").to_bool();
         m_enable_activity_tracing    = config.get("enable_activity_tracing").to_bool();
         m_enable_snapshot_timestamps = config.get("enable_snapshot_timestamps").to_bool();
         m_enable_allocation_tracing  = config.get("enable_allocation_tracing").to_bool();
@@ -720,6 +773,7 @@ public:
     static int tool_init(rocprofiler_client_finalize_t fini_func, void* tool_data)
     {
         ROCPROFILER_CALL(rocprofiler_create_context(&s_hip_api_ctx));
+        ROCPROFILER_CALL(rocprofiler_create_context(&s_marker_ctx));
         ROCPROFILER_CALL(rocprofiler_create_context(&s_activity_ctx));
         ROCPROFILER_CALL(rocprofiler_create_context(&s_rocprofiler_ctx));
         ROCPROFILER_CALL(rocprofiler_create_context(&s_alloc_tracing_ctx));
@@ -730,7 +784,15 @@ public:
             ROCPROFILER_CALLBACK_TRACING_HIP_RUNTIME_API,
             nullptr,
             0,
-            tool_api_callback,
+            hip_api_callback,
+            nullptr
+        ));
+        ROCPROFILER_CALL(rocprofiler_configure_callback_tracing_service(
+            s_marker_ctx,
+            ROCPROFILER_CALLBACK_TRACING_MARKER_CORE_API,
+            nullptr,
+            0,
+            marker_callback,
             nullptr
         ));
         ROCPROFILER_CALL(rocprofiler_configure_callback_tracing_service(
@@ -738,7 +800,7 @@ public:
             ROCPROFILER_CALLBACK_TRACING_CODE_OBJECT,
             nullptr,
             0,
-            tool_api_callback,
+            code_obj_callback,
             nullptr
         ));
 #ifdef CALI_ROCPROFILER_HAVE_ALLOC_TRACING
@@ -832,15 +894,14 @@ public:
             s_instance = nullptr;
         });
 
-        Log(1).stream() << channel->name() << ": Registered rocprofiler service."
-                        << " Activity tracing is " << (s_instance->m_enable_activity_tracing ? "on" : "off")
-                        << std::endl;
+        Log(1).stream() << channel->name() << ": Registered rocprofiler service\n";
     }
 };
 
 RocProfilerService* RocProfilerService::s_instance = nullptr;
 
 rocprofiler_context_id_t RocProfilerService::s_hip_api_ctx       = {};
+rocprofiler_context_id_t RocProfilerService::s_marker_ctx        = {};
 rocprofiler_context_id_t RocProfilerService::s_activity_ctx      = {};
 rocprofiler_context_id_t RocProfilerService::s_rocprofiler_ctx   = {};
 rocprofiler_context_id_t RocProfilerService::s_alloc_tracing_ctx = {};
@@ -858,6 +919,11 @@ const char* RocProfilerService::s_spec = R"json(
     "type": "bool",
     "description": "Enable HIP API interception callbacks",
     "value": "true"
+  },
+  { "name": "enable_marker_callbacks",
+    "type": "bool",
+    "description": "Enable roctx marker callbacks",
+    "value": "false"
   },
   { "name": "enable_activity_tracing",
     "type": "bool",
