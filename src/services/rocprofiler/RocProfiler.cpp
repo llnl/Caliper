@@ -97,6 +97,7 @@ class RocProfilerService
 
     bool m_enable_api_callbacks       = false;
     bool m_enable_marker_callbacks    = false;
+    bool m_enable_rccl_callbacks      = false;
     bool m_enable_activity_tracing    = false;
     bool m_enable_snapshot_timestamps = false;
     bool m_enable_allocation_tracing  = false;
@@ -132,6 +133,7 @@ class RocProfilerService
 
     static rocprofiler_context_id_t s_hip_api_ctx;
     static rocprofiler_context_id_t s_marker_ctx;
+    static rocprofiler_context_id_t s_rccl_ctx;
     static rocprofiler_context_id_t s_activity_ctx;
     static rocprofiler_context_id_t s_rocprofiler_ctx;
     static rocprofiler_context_id_t s_alloc_tracing_ctx;
@@ -574,6 +576,11 @@ class RocProfilerService
             Log(2).stream() << channel->name() << ": rocprofiler: HIP API callbacks activated\n";
         }
 
+        if (m_enable_rccl_callbacks) {
+            ROCPROFILER_CALL(rocprofiler_start_context(s_rccl_ctx));
+            Log(2).stream() << channel->name() << ": rocprofiler: RCCL callbacks activated\n";           
+        }
+
         if (m_enable_marker_callbacks) {
             channel->events().subscribe_attribute(c, m_marker_attr);
             ROCPROFILER_CALL(rocprofiler_start_context(s_marker_ctx));
@@ -622,7 +629,8 @@ class RocProfilerService
 
     void pre_finish_cb(Caliper* c, Channel* channel)
     {
-        auto contexts = make_array(s_hip_api_ctx, s_marker_ctx, s_rocprofiler_ctx, s_activity_ctx, s_alloc_tracing_ctx, s_counter_ctx);
+        auto contexts = make_array(s_hip_api_ctx, s_marker_ctx, s_rccl_ctx, 
+            s_rocprofiler_ctx, s_activity_ctx, s_alloc_tracing_ctx, s_counter_ctx);
 
         for (auto &ctx : contexts) {
             int status = 0;
@@ -722,6 +730,7 @@ class RocProfilerService
 
         m_enable_api_callbacks       = config.get("enable_api_callbacks").to_bool();
         m_enable_marker_callbacks    = config.get("enable_marker_callbacks").to_bool();
+        m_enable_rccl_callbacks      = config.get("enable_rccl_callbacks").to_bool();
         m_enable_activity_tracing    = config.get("enable_activity_tracing").to_bool();
         m_enable_snapshot_timestamps = config.get("enable_snapshot_timestamps").to_bool();
         m_enable_allocation_tracing  = config.get("enable_allocation_tracing").to_bool();
@@ -766,6 +775,7 @@ public:
     {
         ROCPROFILER_CALL(rocprofiler_create_context(&s_hip_api_ctx));
         ROCPROFILER_CALL(rocprofiler_create_context(&s_marker_ctx));
+        ROCPROFILER_CALL(rocprofiler_create_context(&s_rccl_ctx));
         ROCPROFILER_CALL(rocprofiler_create_context(&s_activity_ctx));
         ROCPROFILER_CALL(rocprofiler_create_context(&s_rocprofiler_ctx));
         ROCPROFILER_CALL(rocprofiler_create_context(&s_alloc_tracing_ctx));
@@ -785,6 +795,14 @@ public:
             nullptr,
             0,
             marker_callback,
+            nullptr
+        ));
+        ROCPROFILER_CALL(rocprofiler_configure_callback_tracing_service(
+            s_rccl_ctx,
+            ROCPROFILER_CALLBACK_TRACING_RCCL_API,
+            nullptr,
+            0,
+            hip_api_callback,
             nullptr
         ));
         ROCPROFILER_CALL(rocprofiler_configure_callback_tracing_service(
@@ -894,6 +912,7 @@ RocProfilerService* RocProfilerService::s_instance = nullptr;
 
 rocprofiler_context_id_t RocProfilerService::s_hip_api_ctx       = {};
 rocprofiler_context_id_t RocProfilerService::s_marker_ctx        = {};
+rocprofiler_context_id_t RocProfilerService::s_rccl_ctx          = {};
 rocprofiler_context_id_t RocProfilerService::s_activity_ctx      = {};
 rocprofiler_context_id_t RocProfilerService::s_rocprofiler_ctx   = {};
 rocprofiler_context_id_t RocProfilerService::s_alloc_tracing_ctx = {};
@@ -915,6 +934,11 @@ const char* RocProfilerService::s_spec = R"json(
   { "name": "enable_marker_callbacks",
     "type": "bool",
     "description": "Enable roctx marker callbacks",
+    "value": "false"
+  },
+  { "name": "enable_rccl_callbacks",
+    "type": "bool",
+    "description": "Enable rccl callbacks",
     "value": "false"
   },
   { "name": "enable_activity_tracing",
