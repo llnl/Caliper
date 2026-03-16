@@ -146,7 +146,7 @@ class RocProfilerService
         Attribute subs_attr = c->get_attribute("subscription_event");
         Variant   v_true(true);
 
-        m_api_attr = c->create_attribute("rocm.api", CALI_TYPE_STRING, CALI_ATTR_NESTED, 1, &subs_attr, &v_true);
+        m_api_attr = c->create_attribute("rocm.api", CALI_TYPE_STRING, CALI_ATTR_NESTED | CALI_ATTR_SCOPE_THREAD, 1, &subs_attr, &v_true);
         m_marker_attr = c->create_attribute("rocm.marker", CALI_TYPE_STRING, CALI_ATTR_NESTED, 1, &subs_attr, &v_true);
 
         m_activity_start_attr =
@@ -577,8 +577,9 @@ class RocProfilerService
         }
 
         if (m_enable_rccl_callbacks) {
+            channel->events().subscribe_attribute(c, m_api_attr);
             ROCPROFILER_CALL(rocprofiler_start_context(s_rccl_ctx));
-            Log(2).stream() << channel->name() << ": rocprofiler: RCCL callbacks activated\n";           
+            Log(2).stream() << channel->name() << ": rocprofiler: RCCL callbacks activated\n";
         }
 
         if (m_enable_marker_callbacks) {
@@ -629,7 +630,7 @@ class RocProfilerService
 
     void pre_finish_cb(Caliper* c, Channel* channel)
     {
-        auto contexts = make_array(s_hip_api_ctx, s_marker_ctx, s_rccl_ctx, 
+        auto contexts = make_array(s_hip_api_ctx, s_marker_ctx, s_rccl_ctx,
             s_rocprofiler_ctx, s_activity_ctx, s_alloc_tracing_ctx, s_counter_ctx);
 
         for (auto &ctx : contexts) {
