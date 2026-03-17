@@ -719,6 +719,14 @@ const char* builtin_rocm_option_specs = R"json(
  "config": { "CALI_ROCPROFILER_ENABLE_MARKER_CALLBACKS": "true" }
 },
 {
+ "name": "profile.rccl",
+ "type": "bool",
+ "description": "Profile rccl API functions",
+ "category": "region",
+ "services": [ "rocprofiler" ],
+ "config": { "CALI_ROCPROFILER_ENABLE_RCCL_CALLBACKS": "true" }
+},
+{
  "name": "rocm.gputime",
  "description": "Report GPU time in AMD ROCm activities",
  "type": "bool",
