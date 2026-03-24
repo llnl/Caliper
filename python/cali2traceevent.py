@@ -111,6 +111,8 @@ class CaliTraceEventConverter:
     BUILTIN_TID_ATTRIBUTES = [
         'omp.thread.id',
         'pthread.id',
+        'rocm.agent',
+        'rocm.dst.agent'
     ]
 
     def __init__(self, cfg):
@@ -294,7 +296,7 @@ class CaliTraceEventConverter:
         dur  = float(rec["rocm.activity.duration"])*1e-3
         name = rec.get("rocm.kernel.name", cat)
 
-        trec.update(ph="X", name=name, cat=cat, ts=tst, dur=dur, tid="rocm")
+        trec.update(ph="X", name=name, cat=cat, ts=tst, dur=dur)
 
     def _process_sample_rec(self, rec, trec):
         trec.update(name="sampler", weight=1, ts=_get_timestamp(rec))
