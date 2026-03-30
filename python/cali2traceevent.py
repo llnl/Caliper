@@ -110,6 +110,7 @@ class CaliTraceEventConverter:
 
     BUILTIN_TID_ATTRIBUTES = [
         'omp.thread.id',
+        'cali.thread_id',
         'pthread.id',
         'rocm.agent',
         'rocm.dst.agent'
