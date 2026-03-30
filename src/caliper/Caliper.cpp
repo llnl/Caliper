@@ -255,8 +255,10 @@ struct Caliper::ThreadData {
     bool is_initial_thread;
     bool stack_error;
 
+    uint64_t thread_id;
+
     ThreadData(bool initial_thread = false)
-        : process_bb_count(-1), is_initial_thread(initial_thread), stack_error(false)
+        : process_bb_count(-1), is_initial_thread(initial_thread), stack_error(false), thread_id(0)
     {}
 
     ~ThreadData()
@@ -267,7 +269,7 @@ struct Caliper::ThreadData {
 
     void print_detailed_stats(std::ostream& os)
     {
-        tree.print_statistics(os << "Releasing Caliper thread data: \n") << std::endl;
+        tree.print_statistics(os << "Releasing thread " << thread_id << '\n') << std::endl;
         thread_blackboard.print_statistics(os << "  Thread blackboard: ") << std::endl;
     }
 
@@ -321,10 +323,14 @@ struct Caliper::GlobalData {
     std::vector<ThreadData*> thread_data;
     std::mutex               thread_data_lock;
 
+    Attribute thread_id_attr;
+
     // --- constructor
 
     GlobalData(ThreadData* sT) : attribute_default_scope { CALI_ATTR_SCOPE_THREAD }, max_active_channels { 0 }
     {
+        thread_data.reserve(128);
+
         // put the attribute [name,type,prop] attributes in the map
 
         Attribute name_attr = Attribute::make_attribute(sT->tree.node(Attribute::NAME_ATTR_ID));
@@ -401,6 +407,11 @@ struct Caliper::GlobalData {
         init_attribute_classes(&c);
         init_api_attributes(&c);
 
+        thread_id_attr = c.create_attribute("cali.thread_id", CALI_TYPE_UINT,
+            CALI_ATTR_SCOPE_THREAD | CALI_ATTR_SKIP_EVENTS | CALI_ATTR_ASVALUE);
+
+        c.set(thread_id_attr, cali_make_variant_from_uint(tObj.t_ptr->thread_id));
+
         c.set(
             c.create_attribute("cali.caliper.version", CALI_TYPE_STRING, CALI_ATTR_SKIP_EVENTS | CALI_ATTR_GLOBAL),
             Variant(CALIPER_VERSION)
@@ -414,7 +425,7 @@ struct Caliper::GlobalData {
         tObj.t_ptr = t;
 
         std::lock_guard<std::mutex> g(thread_data_lock);
-
+        t->thread_id = thread_data.size();
         thread_data.push_back(t);
         return t;
     }
@@ -1451,6 +1462,11 @@ void Caliper::finalize()
     }
 }
 
+uint64_t Caliper::get_thread_id() const
+{
+    return sT->thread_id;
+}
+
 //
 // --- Caliper constructor & singleton API
 //
@@ -1499,6 +1515,7 @@ Caliper Caliper::instance()
     if (!tPtr) {
         tPtr = gPtr->add_thread_data(new ThreadData(false /* is_initial_thread */));
         Caliper c(gPtr, tPtr, false);
+        c.set(gPtr->thread_id_attr, cali_make_variant_from_uint(tPtr->thread_id));
 
         for (auto& channel : gPtr->all_channels)
             channel.mP->events.create_thread_evt(&c, &channel);

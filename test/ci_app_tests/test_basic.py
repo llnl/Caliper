@@ -579,7 +579,7 @@ class CaliperLogTest(unittest.TestCase):
         }
 
         log_targets = [
-            '== CALIPER: Releasing Caliper thread data',
+            '== CALIPER: Releasing thread 0',
             'Process blackboard',
             'Thread blackboard',
             'Metadata tree',
