@@ -135,6 +135,10 @@ class CaliperBasicTest(unittest.TestCase):
         self.assertTrue(cat.has_snapshot_with_attributes(
             snapshots, { 'region'      : 'main',
                          'local'       : '99' }))
+        self.assertTrue(cat.has_snapshot_with_attributes(
+            snapshots, {'cali.thread_id' : '1',
+                        'region'       : 'thread_proc',
+                        'global'       : '999' }))
 
     def test_createdir(self):
         """ Test directory creation """
@@ -579,7 +583,7 @@ class CaliperLogTest(unittest.TestCase):
         }
 
         log_targets = [
-            '== CALIPER: Releasing Caliper thread data',
+            '== CALIPER: Releasing thread 0',
             'Process blackboard',
             'Thread blackboard',
             'Metadata tree',

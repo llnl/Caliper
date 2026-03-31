@@ -728,6 +728,9 @@ public:
     /// instance.
     bool is_signal() const { return m_is_signal; };
 
+    /// \brief Return the Caliper object's thread id
+    uint64_t get_thread_id() const;
+
     /// \brief Return \a true if this is a valid %Caliper instance.
     operator bool () const;
 
