@@ -6,6 +6,7 @@
 #ifndef CALI_SYMBOLLOOKUP_LOOKUP_H
 #define CALI_SYMBOLLOOKUP_LOOKUP_H
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
