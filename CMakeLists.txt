@@ -98,6 +98,7 @@ add_caliper_option(BUILD_TESTING  "Build continuous integration app and unit tes
 add_caliper_option(BUILD_DOCS     "Build Caliper documentation" FALSE)
 
 add_caliper_option(RUN_MPI_TESTS  "Run MPI tests (only applicable with BUILD_TESTING=On)" TRUE)
+add_caliper_option(RUN_HIP_TESTS  "Run HIP tests when BUILD_TESTING=On" TRUE)
 
 # allow disabling cmake/pkg-config files and headers for when caliper is a subproject
 add_caliper_option(INSTALL_CONFIG  "Install cmake and pkg-config files" TRUE)
