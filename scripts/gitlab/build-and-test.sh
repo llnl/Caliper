@@ -392,7 +392,14 @@ then
         section_end
     else
         status=$?
-        section_end ; print_error "CMake configuration failed"
+        section_end ; print_error "CMake configuration failed, dumping output..."
+
+        $cmake_exe \
+          -C ${hostconfig_path} \
+          ${cmake_options} \
+          -DCMAKE_INSTALL_PREFIX=${install_dir} \
+          ${project_dir} --debug-output --trace-expand
+
         exit ${status}
     fi
 
