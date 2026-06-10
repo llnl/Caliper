@@ -32,7 +32,7 @@ constexpr int spot_format_version = 2;
 // Helper functions
 //
 
-QuerySpec parse_spec(const char* query)
+QuerySpec parse_spec(const char* query, const char* context)
 {
     CalQLParser parser(query);
 
@@ -41,13 +41,17 @@ QuerySpec parse_spec(const char* query)
             << "\n  in query:\n   " << query << std::endl;
     }
 
+    if (Log::verbosity() >= 3) {
+        Log(3).stream() << "[spot controller]: " << context << " query: " << parser.spec() << "\n";
+    }
+
     return parser.spec();
 }
 
 /// \brief Perform process-local aggregation of channel data into \a output_agg
 void local_aggregate(const char* query, Caliper& c, ChannelBody* chB, CaliperMetadataDB& db, Aggregator& output_agg)
 {
-    QuerySpec spec(parse_spec(query));
+    QuerySpec spec(parse_spec(query, "local"));
 
     RecordSelector filter(spec);
     Preprocessor   prp(spec);
@@ -192,7 +196,7 @@ public:
 
         std::string query = m_opts.build_query("cross", q_cross);
 
-        return parse_spec(query.c_str());
+        return parse_spec(query.c_str(), "timeseries cross");
     }
 
     void flush() {}
@@ -382,7 +386,7 @@ class SpotController : public cali::internal::CustomOutputController
 
         std::string cross_query = m_opts.build_query("cross", q_cross);
 
-        QuerySpec  output_spec(parse_spec(cross_query.c_str()));
+        QuerySpec  output_spec(parse_spec(cross_query.c_str(), "cross"));
         Aggregator output_agg(output_spec);
 
         m_db.add_attribute_aliases(output_spec.aliases);
