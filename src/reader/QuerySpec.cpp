@@ -90,6 +90,12 @@ std::ostream& operator<< (std::ostream& os, const QuerySpec& spec)
 
     if (spec.select.selection == QuerySpec::AttributeSelection::All) {
         os << " select *";
+        for (auto alias_p : spec.aliases) {
+            os << ", " << alias_p.first << " as " << alias_p.second;
+            auto unit_it = spec.units.find(alias_p.first);
+            if (unit_it != spec.units.end())
+                os << " unit " << unit_it->second;
+        }
     } else if (spec.select.selection == QuerySpec::AttributeSelection::List) {
         int count = 0;
         if (spec.select.use_path) {
