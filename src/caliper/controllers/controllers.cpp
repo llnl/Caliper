@@ -675,8 +675,7 @@ const char* builtin_cuda_option_specs = R"json(
       ]
     }
   ]
-},
-{
+},{
  "name": "cuda.gputime",
  "description": "Report GPU time in CUDA activities",
  "type": "bool",
@@ -695,6 +694,37 @@ const char* builtin_cuda_option_specs = R"json(
     avg(scale#t.gpu.c) as \"Avg GPU time (E)\" unit sec,
     max(scale#t.gpu.c) as \"Max GPU time (E)\" unit sec,
     sum(scale#t.gpu.c) as \"Total GPU time (E)\" unit sec"
+ }
+},{
+ "name": "cuda.activity.stats",
+ "description": "CUDA activity statistics",
+ "type": "bool",
+ "category": "metric",
+ "services": [ "cuptitrace" ],
+ "query":
+ {
+  "local":
+  "
+   select
+    cupti.kernel.name as Kernel,
+    sum(cupti.activity.count) as \"GPU invoc.\",
+    min(cupti.activity.duration) as \"Nsec/invoc (min)\",
+    avg(cupti.activity.duration) as \"Nsec/invoc (avg)\",
+    max(cupti.activity.duration) as \"Nsec/invoc (max)\"
+   group by
+    cupti.kernel.name
+  ",
+  "cross":
+  "
+   select
+    cupti.kernel.name as Kernel,
+    sum(sum#cupti.activity.count) as \"GPU invoc.\",
+    min(min#cupti.activity.duration) as \"Nsec/invoc (min)\",
+    avg(avg#cupti.activity.duration) as \"Nsec/incov (avg)\",
+    max(max#cupti.activity.duration) as \"Nsec/invoc (max)\"
+   group by
+    cupti.kernel.name
+  "
  }
 }
 ]

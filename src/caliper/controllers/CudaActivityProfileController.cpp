@@ -57,8 +57,13 @@ public:
         }
 
         std::string query =
-            " select *,scale(cupti.activity.duration,1e-9) as \"time (gpu)\" unit sec"
-            ",scale(sum#cupti.host.duration,1e-9) as \"time\" unit sec"
+            " let t.gputime=scale(cupti.activity.duration,1e-9)"
+            " select *,scale(sum#cupti.host.duration,1e-9) as \"time\" unit sec"
+            ",sum(t.gputime) as \"time (gpu)\" unit sec"
+            ",min(t.gputime) as \"min time/inst\""
+            ",avg(t.gputime) as \"avg time/inst\""
+            ",max(t.gputime) as \"max time/inst\""
+            ",sum(cupti.activity.count) as instances"
             " group by path,cupti.kernel.name,cupti.activity.kind,mpi.rank "
             " format ";
 
