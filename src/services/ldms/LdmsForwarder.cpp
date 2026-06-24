@@ -10,7 +10,7 @@
 #include "caliper/common/Log.h"
 #include "caliper/common/OutputStream.h"
 
-#include "../../common/util/format_util.h"
+#include "../../common/util/format_util.hpp"
 
 #include "ldms/ldms.h"
 #include "ldms/ldmsd_stream.h"

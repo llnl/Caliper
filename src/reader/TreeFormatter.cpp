@@ -18,7 +18,7 @@
 
 #include "../common/StringConverter.h"
 
-#include "../common/util/format_util.h"
+#include "../common/util/format_util.hpp"
 #include "../common/util/split.hpp"
 
 #include <algorithm>

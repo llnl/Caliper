@@ -9,8 +9,8 @@
 
 #include "../common/StringConverter.h"
 
-#include "../common/util/format_util.h"
-#include "../common/util/parse_util.h"
+#include "../common/util/format_util.hpp"
+#include "../common/util/parse_util.hpp"
 
 #include "../services/Services.h"
 

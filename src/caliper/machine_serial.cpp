@@ -3,7 +3,7 @@
 
 #include "caliper/caliper-config.h"
 
-#include "machine.h"
+#include "machine.hpp"
 
 #include "caliper/common/Log.h"
 

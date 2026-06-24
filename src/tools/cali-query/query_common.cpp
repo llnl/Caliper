@@ -1,7 +1,7 @@
 // Copyright (c) 2015-2022, Lawrence Livermore National Security, LLC.
 // See top-level LICENSE file for details.
 
-#include "query_common.h"
+#include "query_common.hpp"
 
 #include "caliper/reader/Aggregator.h"
 #include "caliper/reader/CalQLParser.h"
@@ -13,8 +13,8 @@
 
 #include "caliper/common/Log.h"
 
-#include "../../common/util/parse_util.h"
-#include "../../common/util/format_util.h"
+#include "../../common/util/parse_util.hpp"
+#include "../../common/util/format_util.hpp"
 #include "../../common/util/split.hpp"
 
 #include "../../services/Services.h"

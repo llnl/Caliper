@@ -6,7 +6,7 @@
 #include "caliper/caliper-config.h"
 
 #include "AttributeExtract.h"
-#include "query_common.h"
+#include "query_common.hpp"
 
 #include "../util/Args.h"
 

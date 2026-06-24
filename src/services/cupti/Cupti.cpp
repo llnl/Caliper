@@ -13,7 +13,7 @@
 
 #include "caliper/common/Log.h"
 
-#include "../../common/util/demangle.h"
+#include "../../common/util/demangle.hpp"
 
 #include <cupti.h>
 

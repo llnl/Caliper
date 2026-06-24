@@ -12,7 +12,7 @@
 #include "caliper/common/Node.h"
 #include "caliper/common/OutputStream.h"
 
-#include "../common/util/format_util.h"
+#include "../common/util/format_util.hpp"
 #include "../common/util/split.hpp"
 
 #include <algorithm>
