@@ -1,7 +1,7 @@
 // Copyright (c) 2015-2022, Lawrence Livermore National Security, LLC.
 // See top-level LICENSE file for details.
 
-#include "query_common.h"
+#include "query_common.hpp"
 
 #include "caliper/cali-mpi.h"
 #include "caliper/cali.h"

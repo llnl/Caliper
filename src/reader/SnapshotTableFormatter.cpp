@@ -3,7 +3,7 @@
 #include "caliper/common/CaliperMetadataAccessInterface.h"
 #include "caliper/common/Node.h"
 
-#include "../common/util/format_util.h"
+#include "../common/util/format_util.hpp"
 
 #include <iostream>
 

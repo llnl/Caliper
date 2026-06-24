@@ -5,7 +5,7 @@
 
 #include "caliper/common/Variant.h"
 
-#include "../common/util/parse_util.h"
+#include "../common/util/parse_util.hpp"
 
 #include <iostream>
 #include <sstream>

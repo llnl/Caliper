@@ -9,7 +9,7 @@
 #include "caliper/common/Node.h"
 #include "caliper/common/OutputStream.h"
 
-#include "../common/util/format_util.h"
+#include "../common/util/format_util.hpp"
 
 #include <mutex>
 #include <set>

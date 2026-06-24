@@ -15,7 +15,7 @@
 
 #include "caliper/reader/CaliWriter.h"
 
-#include "../../common/util/file_util.h"
+#include "../../common/util/file_util.hpp"
 
 #include <iostream>
 #include <string>

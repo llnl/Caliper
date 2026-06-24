@@ -1,7 +1,7 @@
 // Copyright (c) 2015-2022, Lawrence Livermore National Security, LLC.
 // See top-level LICENSE file for details.
 
-#include "file_util.h"
+#include "file_util.hpp"
 
 #ifdef _WIN32
 #include <process.h>

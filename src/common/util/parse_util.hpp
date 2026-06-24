@@ -1,7 +1,7 @@
 // Copyright (c) 2015-2022, Lawrence Livermore National Security, LLC.
 // See top-level LICENSE file for details.
 
-/// \file parse_util.h
+/// \file parse_util.hpp
 /// Helper functions to parse config strings etc.
 
 #pragma once

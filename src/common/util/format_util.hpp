@@ -1,7 +1,7 @@
 // Copyright (c) 2015-2022, Lawrence Livermore National Security, LLC.
 // See top-level LICENSE file for details.
 
-/// \file format_util.h
+/// \file format_util.hpp
 /// Helper functions for formatting strings
 
 #pragma once

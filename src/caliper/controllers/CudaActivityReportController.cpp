@@ -3,7 +3,7 @@
 
 #include "caliper/caliper-config.h"
 
-#include "util.h"
+#include "util.hpp"
 
 #include "caliper/ChannelController.h"
 #include "caliper/ConfigManager.h"

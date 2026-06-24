@@ -13,7 +13,7 @@
 #include "caliper/common/Node.h"
 
 #include "../../common/util/unitfmt.h"
-#include "../../common/util/demangle.h"
+#include "../../common/util/demangle.hpp"
 
 #include <cupti.h>
 

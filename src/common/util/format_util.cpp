@@ -1,7 +1,7 @@
 // Copyright (c) 2015-2022, Lawrence Livermore National Security, LLC.
 // See top-level LICENSE file for details.
 
-#include "format_util.h"
+#include "format_util.hpp"
 
 namespace
 {
