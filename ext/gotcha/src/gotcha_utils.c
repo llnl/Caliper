@@ -82,6 +82,7 @@ struct library_t *get_library(struct link_map *map) {
 
 struct library_t *add_library(struct link_map *map) {
   library_t *newlib = gotcha_malloc(sizeof(library_t));
+  if (!newlib) return NULL;
   newlib->map = map;
   newlib->flags = 0;
   newlib->generation = 0;
