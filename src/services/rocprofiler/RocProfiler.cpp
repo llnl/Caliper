@@ -10,7 +10,7 @@
 #include "caliper/common/Log.h"
 
 #include "../../common/util/unitfmt.h"
-#include "../../common/util/demangle.h"
+#include "../../common/util/demangle.hpp"
 
 #include <rocprofiler-sdk/rocprofiler.h>
 #include <rocprofiler-sdk/registration.h>

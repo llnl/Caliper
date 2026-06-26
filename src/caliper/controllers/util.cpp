@@ -1,7 +1,7 @@
 // Copyright (c) 2015-2022, Lawrence Livermore National Security, LLC.
 // See top-level LICENSE file for details.
 
-#include "util.h"
+#include "util.hpp"
 
 #include "../../services/Services.h"
 

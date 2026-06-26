@@ -7,7 +7,7 @@
 #include "caliper/reader/FormatProcessor.h"
 #include "caliper/reader/Preprocessor.h"
 
-#include "../common/util/parse_util.h"
+#include "../common/util/parse_util.hpp"
 
 #include <algorithm>
 #include <cctype>

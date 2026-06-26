@@ -5,7 +5,7 @@
 
 #include "caliper/common/Log.h"
 
-#include "../../common/util/demangle.h"
+#include "../../common/util/demangle.hpp"
 
 #include <elfutils/libdwfl.h>
 #include <unistd.h>

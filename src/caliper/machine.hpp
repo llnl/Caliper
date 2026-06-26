@@ -1,7 +1,7 @@
 // Copyright (c) 2015-2022, Lawrence Livermore National Security, LLC.
 // See top-level LICENSE file for details.
 
-/// \file machine.h
+/// \file machine.hpp
 /// Machine utility functions (internal API)
 
 #pragma once

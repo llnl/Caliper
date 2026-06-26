@@ -15,7 +15,7 @@
 
 #include "caliper/common/lockfree-tree.hpp"
 
-#include "../common/util/format_util.h"
+#include "../common/util/format_util.hpp"
 
 #include <algorithm>
 #include <functional>

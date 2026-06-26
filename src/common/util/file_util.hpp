@@ -1,7 +1,7 @@
 // Copyright (c) 2015-2022, Lawrence Livermore National Security, LLC.
 // See top-level LICENSE file for details.
 
-/// \file file_util.h
+/// \file file_util.hpp
 /// Helper functions dealing with files
 
 #pragma once

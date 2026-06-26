@@ -13,7 +13,7 @@
 #include "caliper/common/Node.h"
 
 #include "../../common/util/unitfmt.h"
-#include "../../common/util/demangle.h"
+#include "../../common/util/demangle.hpp"
 
 #include <cupti.h>
 
@@ -103,6 +103,7 @@ class CuptiTraceService
     Attribute activity_end_attr;
     Attribute activity_duration_attr;
     Attribute activity_kind_attr;
+    Attribute activity_count_attr;
     Attribute kernel_name_attr;
     Attribute memcpy_kind_attr;
     Attribute memcpy_bytes_attr;
@@ -373,15 +374,18 @@ class CuptiTraceService
 
                 // append the memcpy info
 
-                Attribute attr[6] = { activity_kind_attr,  memcpy_kind_attr,  memcpy_bytes_attr,
-                                      activity_start_attr, activity_end_attr, activity_duration_attr };
-                Variant   data[6] = {
+                Attribute attr[7] = { activity_kind_attr,  memcpy_kind_attr,  memcpy_bytes_attr,
+                                      activity_start_attr, activity_end_attr, activity_duration_attr,
+                                      activity_count_attr
+                };
+                Variant   data[7] = {
                     Variant("memcpy"),
                     Variant(get_memcpy_kind_string(static_cast<CUpti_ActivityMemcpyKind>(memcpy->copyKind))),
                     Variant(cali_make_variant_from_uint(memcpy->bytes)),
                     Variant(cali_make_variant_from_uint(memcpy->start)),
                     Variant(cali_make_variant_from_uint(memcpy->end)),
-                    Variant(cali_make_variant_from_uint(memcpy->end - memcpy->start))
+                    Variant(cali_make_variant_from_uint(memcpy->end - memcpy->start)),
+                    Variant(cali_make_variant_from_uint(1))
                 };
 
                 FixedSizeSnapshotRecord<8> snapshot;
@@ -442,20 +446,26 @@ class CuptiTraceService
 
                 std::string name = cali::util::demangle(kernel->name);
 
-                Attribute attr[5] = { activity_kind_attr,
-                                      kernel_name_attr,
-                                      activity_start_attr,
-                                      activity_end_attr,
-                                      activity_duration_attr };
-                Variant   data[5] = { Variant("kernel"),
-                                      Variant(name.c_str()),
-                                      Variant(cali_make_variant_from_uint(kernel->start)),
-                                      Variant(cali_make_variant_from_uint(kernel->end)),
-                                      Variant(cali_make_variant_from_uint(kernel->end - kernel->start)) };
+                Attribute attr[6] = {
+                    activity_kind_attr,
+                    kernel_name_attr,
+                    activity_start_attr,
+                    activity_end_attr,
+                    activity_duration_attr,
+                    activity_count_attr
+                };
+                Variant   data[6] = {
+                    Variant("kernel"),
+                    Variant(name.c_str()),
+                    Variant(cali_make_variant_from_uint(kernel->start)),
+                    Variant(cali_make_variant_from_uint(kernel->end)),
+                    Variant(cali_make_variant_from_uint(kernel->end - kernel->start)),
+                    Variant(cali_make_variant_from_uint(1))
+                };
 
                 FixedSizeSnapshotRecord<8> snapshot;
 
-                c->make_record(5, attr, data, snapshot.builder(), parent);
+                c->make_record(6, attr, data, snapshot.builder(), parent);
                 SnapshotView view = snapshot.view();
 
                 std::vector<Entry> rec;
@@ -960,6 +970,11 @@ class CuptiTraceService
         );
         activity_kind_attr =
             c->create_attribute("cupti.activity.kind", CALI_TYPE_STRING, CALI_ATTR_DEFAULT | CALI_ATTR_SKIP_EVENTS);
+        activity_count_attr = c->create_attribute(
+            "cupti.activity.count",
+            CALI_TYPE_UINT,
+            CALI_ATTR_ASVALUE | CALI_ATTR_SKIP_EVENTS | CALI_ATTR_AGGREGATABLE
+        );
         kernel_name_attr =
             c->create_attribute("cupti.kernel.name", CALI_TYPE_STRING, CALI_ATTR_DEFAULT | CALI_ATTR_SKIP_EVENTS);
         memcpy_kind_attr =
