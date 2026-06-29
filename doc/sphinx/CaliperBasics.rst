@@ -144,32 +144,32 @@ Let's try this on Caliper's cxx-example program:
     $ cd Caliper/build
     $ make cxx-example
     $ CALI_CONFIG=runtime-report ./examples/apps/cxx-example
-    Path       Min time/rank Max time/rank Avg time/rank Time %
-    main            0.000119      0.000119      0.000119  7.079120
-      mainloop      0.000067      0.000067      0.000067  3.985723
-        foo         0.000646      0.000646      0.000646 38.429506
-      init          0.000017      0.000017      0.000017  1.011303
+    Path       Min time/rank Avg time/rank Max time/rank Time %
+    main            0.000754      0.000754      0.000754 100.000000
+      init          0.000005      0.000005      0.000005   0.674983
+      mainloop      0.000705      0.000705      0.000705  93.467207
+        foo         0.000671      0.000671      0.000671  89.073849
 
-Like most built-in recipes, the runtime-report config works for MPI and
+The runtime-report config works for MPI and
 non-MPI programs. By default, it reports the minimum, maximum, and average
-exclusive time (seconds) spent in each marked code region across MPI ranks
-(the three values are identical in non-MPI programs). Exclusive time is the
-time spent in a region without the time spent in its children.
+inclusive time (seconds) spent in each marked code region across MPI ranks
+(the three values are identical in non-MPI programs). Inclusive time is the
+time spent in a region including the time spent in its children.
 
 You can customize the report with additional options. Some options enable
 additional Caliper functionality, such as profiling MPI and CUDA functions in
 addition to the user-defined regions, or additional metrics like memory usage.
-Another example is the `calc.inclusive` option, which prints inclusive instead
-of exclusive region times:
+One example is the `region.count` option, which prints the number of times
+each region was invoked in addition to the runtime:
 
 .. code-block:: sh
 
     $ CALI_CONFIG=runtime-report,calc.inclusive ./examples/apps/cxx-example
-    Path       Min time/rank Max time/rank Avg time/rank Time %
-    main            0.000658      0.000658      0.000658 55.247691
-      mainloop      0.000637      0.000637      0.000637 53.484467
-        foo         0.000624      0.000624      0.000624 52.392947
-      init          0.000003      0.000003      0.000003  0.251889
+    Path       Min time/rank Avg time/rank Max time/rank Time %     Calls/rank (min) Calls/rank (avg) Calls/rank (max) Calls (total)
+    main            0.000769      0.000769      0.000769 100.000000                1                1                1             1
+      init          0.000005      0.000005      0.000005   0.602028                1                1                1             1
+      mainloop      0.000725      0.000725      0.000725  94.210294                5                5                5             5
+        foo         0.000689      0.000689      0.000689  89.550689                4                4                4             4
 
 Caliper provides many more measurement recipes that make use of region
 annotations. For example, `runtime-profile` writes a .cali file with region
@@ -327,11 +327,11 @@ Caliper configuration with the `-P` command-line argument, e.g.
 .. code-block:: sh
 
     $ ./examples/apps/cxx-example -P runtime-report
-    Path       Min time/rank Max time/rank Avg time/rank Time %
-    main            0.000129      0.000129      0.000129  5.952930
-      mainloop      0.000080      0.000080      0.000080  3.691740
-        foo         0.000719      0.000719      0.000719 33.179511
-      init          0.000021      0.000021      0.000021  0.969082
+    Path       Time (E) Time (I) Time % (E) Time % (I)
+    main       0.000047 0.000749   6.296620 100.000000
+      init     0.000005 0.000005   0.616106   0.616106
+      mainloop 0.000032 0.000697   4.286163  93.087274
+        foo    0.000665 0.000665  88.801111  88.801111
 
 See :doc:`ConfigManagerAPI` for the complete API documentation. The
 ``c-example`` and ``fortran-example`` example programs in the Caliper source
@@ -363,21 +363,21 @@ boolean parameters, only the key needs to be added to enable it; for example,
 of parentheses; these apply to all configs.
 
 In the example below, we enable the `mem.highwatermark` option in
-`runtime-report`. This adds the "Allocated MB" column that shows the maximum
+`runtime-report`. This adds the "Mem HWM MB" column that shows the maximum
 amount of memory that was allocated in each region:
 
 .. code-block:: sh
 
     $ ./examples/apps/cxx-example -P runtime-report,mem.highwatermark
-    Path       Min time/rank Max time/rank Avg time/rank Time %   Allocated MB
-    main            0.000179      0.000179      0.000179 2.054637     0.000047
-      mainloop      0.000082      0.000082      0.000082 0.941230     0.000016
-        foo         0.000778      0.000778      0.000778 8.930211     0.000016
-      init          0.000020      0.000020      0.000020 0.229568     0.000000
+    Path       Time (E) Time (I) Time % (E) Time % (I) Mem HWM MB
+    main       0.000080 0.000822   9.681867 100.000000   0.000047
+      init     0.000006 0.000006   0.729429   0.729429   0.000000
+      mainloop 0.000042 0.000737   5.139198  89.588704   0.000016
+        foo    0.000695 0.000695  84.449505  84.449505   0.000016
 
-You can use ``cali-query --help=configs`` to list all available recipes and their
-parameters. You can also query parameters for a specific recipe, e.g.
-``cali-query --help=runtime-report``.
+You can use ``cali-query --help=configs`` to list all available recipes.
+You can list the available parameters for a specific recipe with
+``--help=[recipe name]`` e.g. ``cali-query --help=runtime-report``.
 
 Some available performance measurement recipes include:
 
@@ -596,7 +596,7 @@ performance visualization web framework.
 
 .. _recording_metadata:
 
-Recording program metadata
+Recording run metadata
 --------------------------------
 
 Caliper is often used for performance comparison studies involving large
@@ -658,7 +658,7 @@ contains the ``adiak::adiak`` target, which should be linked to the target code:
 
 The Adiak CMake package file lives in ``lib/cmake/adiak`` inside the Adiak
 installation directory. Set ``-Dadiak_DIR`` to point CMake to the Adiak package: ::
-  
+
     $ cmake -Dadiak_DIR=/path-to-adiak/lib/cmake/adiak
 
 C++ source files using Adiak should include ``adiak.hpp``. C sources should
