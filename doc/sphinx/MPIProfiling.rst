@@ -79,11 +79,12 @@ operations.
 MPI Function filtering
 ................................
 
-You can use the `mpi.include` and `mpi.exclude` to explicitly select or
-filter out MPI operations to capture. This is a more efficient option than
-filtering MPI functions with the name-based `include_regions` or
-`exclude_regions` option. As an example, we can use `mpi.include` to only
-measure `MPI_Allreduce`::
+You can use `mpi.include` and `mpi.exclude` to explicitly select or
+filter out MPI operations to capture. This is more efficient than using
+the `include_regions` or `exclude_regions` options
+(see :doc:`RegionFiltering`)
+for MPI functions. As an example, we can use `mpi.include` to only
+instrument `MPI_Allreduce`::
 
     $ CALI_CONFIG=runtime-report,profile.mpi,mpi.include=MPI_Allreduce
     Path                                       Min time/rank Max time/rank Avg time/rank Time %

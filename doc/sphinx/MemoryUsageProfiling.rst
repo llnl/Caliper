@@ -84,7 +84,7 @@ mark in number of pages observed in the respective categories. Note the number o
 pages in the example is highest in the `CalcFBHourglassForceForElems` function,
 just as in the `alloc.stats` output before: ::
 
-    $ CALI_CONFIG=runtime-report,mem.highwatermark ./lulesh2.0
+    $ CALI_CONFIG=runtime-report,mem.pages ./lulesh2.0
     [...]
     Path                                       Time (E) Time (I) Time % (E) Time % (I) VmSize VmRSS Data
     main                                       0.010168 9.979632   0.101883  99.997550  79862  6786 33651
