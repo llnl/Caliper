@@ -90,7 +90,7 @@ package manager:
 
     $ spack install caliper
 
-Building Caliper manually requires cmake 3.12+ and a C++11-compatible
+Building Caliper manually requires cmake 3.17+ and a C++11-compatible
 Compiler. Clone Caliper from github and proceed as follows:
 
     $ git clone https://github.com/LLNL/Caliper.git
