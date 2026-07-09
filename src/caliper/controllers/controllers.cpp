@@ -230,6 +230,18 @@ const char* builtin_base_option_specs = R"json(
  "category": "event",
  "config": { "CALI_EVENT_REGION_LEVEL": "{}" }
 },{
+ "name": "include_attributes",
+ "type": "string",
+ "description": "Only take snapshots for the given attribute names/patterns.",
+ "category": "event",
+ "config": { "CALI_EVENT_INCLUDE_ATTRIBUTES": "{}" }
+},{
+ "name": "exclude_attributes",
+ "type": "string",
+ "description": "Do not take snapshots for the given attribute names/patterns.",
+ "category": "event",
+ "config": { "CALI_EVENT_EXCLUDE_ATTRIBUTES": "{}" }
+},{
  "name": "include_branches",
  "type": "string",
  "description": "Only take snapshots for branches with the given region names.",

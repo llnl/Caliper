@@ -48,8 +48,6 @@ class EventTrigger
     Attribute region_count_attr;
     Entry     region_count_entry;
 
-    std::vector<std::string> trigger_attr_names;
-
     bool enable_snapshot_info { true };
     int  region_level { 0 };
 
@@ -57,6 +55,7 @@ class EventTrigger
 
     RegionFilter region_filter;
     RegionFilter branch_filter;
+    RegionFilter attr_filter;
 
     std::vector<Variant> branch_filter_stack;
 
@@ -116,12 +115,9 @@ class EventTrigger
     {
         if (attr.id() < 12 /* skip fixed metadata attributes */ || attr.skip_events())
             return;
-
-        auto it = std::find(trigger_attr_names.begin(), trigger_attr_names.end(), attr.name());
-
-        if (trigger_attr_names.size() > 0 && it == trigger_attr_names.end())
-            return;
         if (attr.level() < region_level)
+            return;
+        if (!attr_filter.pass(attr.node()->data()))
             return;
 
         mark_attribute(c, attr);
@@ -277,7 +273,7 @@ class EventTrigger
                 check_attribute(c, attr);
     }
 
-    EventTrigger(Caliper* c, Channel* channel) 
+    EventTrigger(Caliper* c, Channel* channel)
         : event_root_node(CALI_INV_ID, CALI_INV_ID, Variant()), channel_name { channel->name() }
     {
         region_count_attr = c->create_attribute(
@@ -289,16 +285,26 @@ class EventTrigger
 
         ConfigSet cfg = services::init_config_from_spec(channel->config(), s_spec);
 
-        trigger_attr_names   = cfg.get("trigger").to_stringlist(",:");
         enable_snapshot_info = cfg.get("enable_snapshot_info").to_bool();
         parse_region_level(cfg.get("region_level").to_string());
+
+        {
+            std::string i_filter = cfg.get("include_attributes").to_string();
+            std::string e_filter = cfg.get("exclude_attributes").to_string();
+
+            auto p = RegionFilter::from_config(i_filter, e_filter);
+            if (!p.second.empty()) {
+                Log(0).stream() << channel->name() << ": event: filter parse error: " << p.second << std::endl;
+            } else {
+                attr_filter = p.first;
+            }
+        }
 
         {
             std::string i_filter = cfg.get("include_regions").to_string();
             std::string e_filter = cfg.get("exclude_regions").to_string();
 
             auto p = RegionFilter::from_config(i_filter, e_filter);
-
             if (!p.second.empty()) {
                 Log(0).stream() << channel->name() << ": event: filter parse error: " << p.second << std::endl;
             } else {
@@ -310,7 +316,6 @@ class EventTrigger
             std::string i_filter = cfg.get("include_branches").to_string();
 
             auto p = RegionFilter::from_config(i_filter, "");
-
             if (!p.second.empty()) {
                 Log(0).stream() << channel->name() << ": event: branch filter parse error: " << p.second << std::endl;
             } else {
@@ -380,7 +385,7 @@ const char* EventTrigger::s_spec = R"json(
   {
    "name": "trigger",
    "type": "stringlist",
-   "description": "List of attributes that trigger measurements (optional)"
+   "description": "Deprecated, use include_attributes instead"
   },{
    "name": "region_level",
    "type": "string",
@@ -391,6 +396,14 @@ const char* EventTrigger::s_spec = R"json(
    "type": "bool",
    "description": "If true, add begin/end attributes at each event. Increases overhead.",
    "value": "True"
+  },{
+   "name": "include_attributes",
+   "type": "string",
+   "description": "Specify attributes that will trigger snapshots"
+  },{
+   "name": "exclude_attributes",
+   "type": "string",
+   "description": "Specify attributes that won't trigger snapshots"
   },{
    "name": "include_regions",
    "type": "string",

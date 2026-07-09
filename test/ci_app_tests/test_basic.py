@@ -326,6 +326,44 @@ class CaliperBasicTest(unittest.TestCase):
         self.assertTrue(cat.has_snapshot_with_attributes(
             snapshots, { 'testbinding' : [ 'binding.nested=outer', 'binding.nested=inner' ] }))
 
+    def test_include_attribute_filter(self):
+        """ Test attribute filtering with the include_attributes option """
+
+        target_cmd = [ './ci_test_c_ann', 'event-trace,include_attributes="ci_test_c_ann.setbyname",output=stdout' ]
+
+        out,_ = cat.run_test(target_cmd, {})
+        snapshots,_ = caliperreader.read_caliper_contents(io.StringIO(out.decode()))
+
+        self.assertFalse(cat.has_snapshot_with_keys(snapshots, ["phase", "iteration"]))
+        self.assertTrue(cat.has_snapshot_with_keys(snapshots, ["event.end#ci_test_c_ann.setbyname"]))
+
+    def test_exclude_attribute_filter(self):
+        """ Test attribute filtering with the exclude_attributes option """
+
+        target_cmd = [ './ci_test_c_ann', 'event-trace,exclude_attributes="ci_test_c_ann.setbyname",output=stdout' ]
+
+        out,_ = cat.run_test(target_cmd, {})
+        snapshots,_ = caliperreader.read_caliper_contents(io.StringIO(out.decode()))
+
+        self.assertTrue(cat.has_snapshot_with_keys(snapshots, ["phase", "iteration"]))
+        self.assertFalse(cat.has_snapshot_with_keys(snapshots, ["event.end#ci_test_c_ann.setbyname"]))
+
+    def test_exclusive_region_filter(self):
+        """ Test region name filtering with the exclude_regions option """
+
+        target_cmd = [ './ci_test_macros', '0', 'runtime-profile,exclude_regions="before_loop,inner_before_loop",output.format=cali,output=stdout' ]
+
+        out,_ = cat.run_test(target_cmd, {})
+        snapshots,_ = caliperreader.read_caliper_contents(io.StringIO(out.decode()))
+
+        self.assertTrue(cat.has_snapshot_with_attributes(
+            snapshots, {
+                'region' : [ 'main', 'foo' ],
+                'loop'   : [ 'main loop', 'fooloop' ] }))
+        self.assertFalse(cat.has_snapshot_with_attributes(
+            snapshots, {
+                'region' : [ 'main', 'before_loop' ] }))
+
     def test_inclusive_region_filter(self):
         """ Test region name filtering with the include_regions option """
 
