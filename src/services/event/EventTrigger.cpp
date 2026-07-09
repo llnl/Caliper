@@ -292,6 +292,10 @@ class EventTrigger
             std::string i_filter = cfg.get("include_attributes").to_string();
             std::string e_filter = cfg.get("exclude_attributes").to_string();
 
+            // The "CALI_EVENT_TRIGGER" option is a depracated way to specify an attribute filter
+            if (i_filter.empty())
+                i_filter = cfg.get("trigger").to_string();
+
             auto p = RegionFilter::from_config(i_filter, e_filter);
             if (!p.second.empty()) {
                 Log(0).stream() << channel->name() << ": event: filter parse error: " << p.second << std::endl;
