@@ -533,6 +533,12 @@ public:
     /// \ref Caliper::get(const Attribute&) should be used instead.
     Entry get_blackboard_entry(const Attribute& attr);
 
+    /// \brief Get thread region entry. Internal use.
+    Entry get_thread_region_entry();
+
+    /// \brief Set thread region entry. Internal use.
+    void set_thread_region_entry(const Entry& e);
+
     /// \brief Retrieve the current path entry from the blackboard.
     Entry get_path_node();
 

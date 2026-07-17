@@ -79,12 +79,12 @@ class CaliperIoServiceTest(unittest.TestCase):
             self.assertTrue(cat.has_snapshot_with_attributes(
                 snapshots, {'my_thread_id' : '49',
                             'pthread.is_master' : 'false',
-                            'region'     : 'thread_proc',
+                            'region'       : [ 'main', 'thread_proc' ],
                             'global'       : '999' }))
             self.assertTrue(cat.has_snapshot_with_attributes(
-                snapshots, { 'region'    : 'main',
+                snapshots, { 'region'      : 'main',
                             'pthread.is_master' : 'true',
-                            'local'       : '99' }))
+                            'local'        : '99' }))
 
 
 if __name__ == "__main__":

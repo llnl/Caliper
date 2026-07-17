@@ -1253,6 +1253,21 @@ Entry Caliper::get_path_node()
     return e;
 }
 
+Entry Caliper::get_thread_region_entry()
+{
+    std::lock_guard<::siglock> g(sT->lock);
+    return sT->thread_blackboard.get(REGION_KEY);
+}
+
+void Caliper::set_thread_region_entry(const Entry& e)
+{
+    if (e.empty())
+        return;
+
+    std::lock_guard<::siglock> g(sT->lock);
+    sT->thread_blackboard.set(REGION_KEY, e, true);
+}
+
 // --- Memory region tracking
 
 void Caliper::memory_region_begin(
