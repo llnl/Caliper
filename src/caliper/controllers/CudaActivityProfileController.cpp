@@ -70,7 +70,7 @@ public:
         query.append(format_spec);
 
         if (use_mpi) {
-            config()["CALI_SERVICES_ENABLE"].append(",mpi,mpireport");
+            config()["CALI_SERVICES_ENABLE"].append(",mpireport");
             config()["CALI_AGGREGATE_KEY"]               = "mpi.rank";
             config()["CALI_MPIREPORT_FILENAME"]          = output;
             config()["CALI_MPIREPORT_WRITE_ON_FINALIZE"] = "false";

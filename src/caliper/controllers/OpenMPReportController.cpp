@@ -52,7 +52,7 @@ public:
         cross_query.append(" format ").append(format);
 
         if (use_mpi) {
-            config()["CALI_SERVICES_ENABLE"].append(",mpi,mpireport");
+            config()["CALI_SERVICES_ENABLE"].append(",mpireport");
             config()["CALI_MPIREPORT_FILENAME"]          = opts.get("output", "stderr");
             config()["CALI_MPIREPORT_WRITE_ON_FINALIZE"] = "false";
             config()["CALI_MPIREPORT_LOCAL_CONFIG"]      = opts.build_query("local", local_query);

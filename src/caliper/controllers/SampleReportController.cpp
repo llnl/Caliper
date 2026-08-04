@@ -73,7 +73,7 @@ public:
             config()["CALI_SERVICES_ENABLE"].append(",pthread");
 
         if (use_mpi) {
-            config()["CALI_SERVICES_ENABLE"].append(",mpi,mpireport");
+            config()["CALI_SERVICES_ENABLE"].append(",mpireport");
             config()["CALI_MPIREPORT_FILENAME"]          = opts.get("output", "stderr");
             config()["CALI_MPIREPORT_APPEND"]            = opts.get("output.append");
             config()["CALI_MPIREPORT_WRITE_ON_FINALIZE"] = "false";

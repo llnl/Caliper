@@ -76,7 +76,7 @@ public:
             config()["CALI_SERVICES_ENABLE"].append(",pthread");
 
         if (use_mpi) {
-            config()["CALI_SERVICES_ENABLE"].append(",mpi,mpireport");
+            config()["CALI_SERVICES_ENABLE"].append(",mpireport");
             config()["CALI_MPIREPORT_FILENAME"]          = output;
             config()["CALI_MPIREPORT_WRITE_ON_FINALIZE"] = "false";
             config()["CALI_MPIREPORT_CONFIG"]            = opts.build_query("local", query);
