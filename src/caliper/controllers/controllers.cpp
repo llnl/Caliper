@@ -428,7 +428,7 @@ const char* builtin_mpi_option_specs = R"json(
   "select
     min(min#mms.min) as \"Msg size (min)\" unit Byte,
     avg(avg#mms.avg) as \"Msg size (avg)\" unit Byte,
-    max(max#mms.avg) as \"Msg size (avg)\" unit Byte"
+    max(max#mms.max) as \"Msg size (max)\" unit Byte"
  }
 },
 {
