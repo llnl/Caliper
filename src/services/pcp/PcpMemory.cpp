@@ -94,7 +94,7 @@ class PcpMemory
             ++num_computed;
     }
 
-    void pre_flush_cb(Caliper* c, Channel* channel)
+    void pre_flush_cb(Caliper* c)
     {
         ++num_flushes;
 
@@ -103,11 +103,6 @@ class PcpMemory
 
         rd_counter_attrs = ::find_counter_attributes(*c, rd_cas_metrics);
         wr_counter_attrs = ::find_counter_attributes(*c, wr_cas_metrics);
-
-        if (rd_counter_attrs.size() + wr_counter_attrs.size() > 0)
-            channel->events().postprocess_snapshot.connect([this](Caliper*, Channel*, std::vector<Entry>& rec) {
-                this->postprocess_snapshot_cb(rec);
-            });
     }
 
     void finish_cb(Caliper* c, Channel* channel)
@@ -155,8 +150,11 @@ public:
 
         PcpMemory* instance = new PcpMemory(c, channel);
 
-        channel->events().pre_flush_evt.connect([instance](Caliper* c, Channel* channel, SnapshotView) {
-            instance->pre_flush_cb(c, channel);
+        channel->events().pre_flush_evt.connect([instance](Caliper* c, ChannelBody*, SnapshotView) {
+            instance->pre_flush_cb(c);
+        });
+        channel->events().postprocess_snapshot.connect([instance](Caliper*, std::vector<Entry>& rec) {
+            instance->postprocess_snapshot_cb(rec);
         });
         channel->events().finish_evt.connect([instance](Caliper* c, Channel* channel) {
             instance->finish_cb(c, channel);

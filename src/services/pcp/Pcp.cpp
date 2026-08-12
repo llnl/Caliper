@@ -6,7 +6,7 @@
 
 #include "../Services.h"
 
-#include "../../caliper/machine.h"
+#include "../../caliper/machine.hpp"
 
 #include "caliper/Caliper.h"
 #include "caliper/SnapshotRecord.h"
@@ -237,7 +237,7 @@ public:
             return;
         }
 
-        channel->events().snapshot.connect([instance](Caliper* c, Channel*, SnapshotView, SnapshotBuilder& rec) {
+        channel->events().snapshot.connect([instance](Caliper* c, SnapshotView, SnapshotBuilder& rec) {
             instance->snapshot(c, rec);
         });
         channel->events().post_init_evt.connect([instance](Caliper* c, Channel*) {
