@@ -27,6 +27,22 @@ gotcha_wrappee_handle_t orig_pthread_create_handle = 0x0;
 
 Attribute id_attr;
 Attribute master_attr;
+bool forward_parent_region = false;
+
+const char* pthreadservice_spec = R"json(
+{
+ "name": "pthread",
+ "description": "Instrument new threads in pthread_create()",
+ "config":
+ [
+  { "name": "forward_parent_region",
+    "type": "bool",
+    "description": "Forward parent thread's region to child thread on thread creation",
+    "value": "false"
+  }
+ ]
+}
+)json";
 
 struct wrapper_args {
     void* (*fn)(void*);
@@ -48,7 +64,8 @@ void* thread_wrapper(void* arg)
     if (c) {
         c.set(master_attr, Variant(false));
         c.set(id_attr, Variant(cali_make_variant_from_uint(id)));
-        c.set_thread_region_entry(wrap->region_entry);
+        if (forward_parent_region)
+            c.set_thread_region_entry(wrap->region_entry);
     }
 
     void* ret  = (*(wrap->fn))(wrap->arg);
@@ -96,6 +113,9 @@ void post_init_cb(Caliper* c, Channel* channel)
 // Initialization routine.
 void pthreadservice_initialize(Caliper* c, Channel* chn)
 {
+    auto config = services::init_config_from_spec(chn->config(), pthreadservice_spec);
+    forward_parent_region = config.get("forward_parent_region").to_bool();
+
     Attribute subscription_attr = c->get_attribute("subscription_event");
     Variant   v_true(true);
 
@@ -123,6 +143,6 @@ void pthreadservice_initialize(Caliper* c, Channel* chn)
 namespace cali
 {
 
-CaliperService pthread_service { "pthread", ::pthreadservice_initialize };
+CaliperService pthread_service { ::pthreadservice_spec, ::pthreadservice_initialize };
 
 }

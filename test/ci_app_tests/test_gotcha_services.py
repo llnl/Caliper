@@ -64,6 +64,7 @@ class CaliperIoServiceTest(unittest.TestCase):
 
             caliper_config = {
                 'CALI_SERVICES_ENABLE'   : 'event,pthread,trace,recorder',
+                'CALI_PTHREAD_FORWARD_PARENT_REGION': 'true',
                 'CALI_RECORDER_FILENAME' : 'stdout',
             }
 

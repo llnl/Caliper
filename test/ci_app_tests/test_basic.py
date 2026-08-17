@@ -126,18 +126,18 @@ class CaliperBasicTest(unittest.TestCase):
             snapshots, {'local', 'my_thread_id' }))
         self.assertTrue(cat.has_snapshot_with_attributes(
             snapshots, {'my_thread_id' : '16',
-                        'region'       : ['main', 'thread_proc'],
+                        'region'       : 'thread_proc',
                         'global'       : '999' }))
         self.assertTrue(cat.has_snapshot_with_attributes(
             snapshots, {'my_thread_id' : '49',
-                        'region'       : ['main','thread_proc'],
+                        'region'       : 'thread_proc',
                         'global'       : '999' }))
         self.assertTrue(cat.has_snapshot_with_attributes(
             snapshots, { 'region'      : 'main',
                          'local'       : '99' }))
         self.assertTrue(cat.has_snapshot_with_attributes(
             snapshots, {'cali.thread_id' : '1',
-                        'region'       : ['main','thread_proc'],
+                        'region'       : 'thread_proc',
                         'global'       : '999' }))
 
     def test_createdir(self):
