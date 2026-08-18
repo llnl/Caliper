@@ -16,19 +16,13 @@ class CaliperBasicTest(unittest.TestCase):
         target_cmd = [ './ci_test_basic' ]
         query_cmd  = [ '../../src/tools/cali-query/cali-query', '-e' ]
 
-        caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
-            'CALI_RECORDER_FILENAME' : 'stdout',
-            'CALI_LOG_VERBOSITY'     : '0'
-        }
-
-        query_output = cat.run_test_with_query(target_cmd, query_cmd, caliper_config)
+        query_output = cat.run_test_with_query(target_cmd, query_cmd, { 'CALI_CONFIG': 'event-trace,output=stdout' })
         snapshots = cat.get_snapshots_from_text(query_output)
 
         self.assertTrue(len(snapshots) > 10)
 
         self.assertTrue(cat.has_snapshot_with_keys(
-            snapshots, {'iteration', 'myphase', 'time.inclusive.duration.ns'}))
+            snapshots, {'iteration', 'myphase', 'time.duration.ns'}))
         self.assertTrue(cat.has_snapshot_with_attributes(
             snapshots, {'event.end#myphase': 'initialization', 'myphase': 'initialization'}))
         self.assertTrue(cat.has_snapshot_with_attributes(
@@ -55,13 +49,7 @@ class CaliperBasicTest(unittest.TestCase):
         target_cmd = [ './ci_test_basic' ]
         query_cmd  = [ '../../src/tools/cali-query/cali-query', '--list-attributes', '-e', '--print-attributes', 'cali.attribute.name,meta.int,cali.attribute.prop' ]
 
-        caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
-            'CALI_RECORDER_FILENAME' : 'stdout',
-            'CALI_LOG_VERBOSITY'     : '0'
-        }
-
-        query_output = cat.run_test_with_query(target_cmd, query_cmd, caliper_config)
+        query_output = cat.run_test_with_query(target_cmd, query_cmd, {'CALI_CONFIG': 'event-trace,output=stdout'})
         snapshots = cat.get_snapshots_from_text(query_output)
 
         self.assertTrue(cat.has_snapshot_with_attributes(
@@ -75,10 +63,8 @@ class CaliperBasicTest(unittest.TestCase):
         query_cmd  = [ '../../src/tools/cali-query/cali-query', '--list-attributes', '-e', '--print-attributes', 'cali.attribute.name,meta.int,cali.attribute.prop' ]
 
         caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
+            'CALI_CONFIG': 'event-trace,output=stdout',
             'CALI_CALIPER_ATTRIBUTE_DEFAULT_SCOPE' : 'process',
-            'CALI_RECORDER_FILENAME' : 'stdout',
-            'CALI_LOG_VERBOSITY'     : '0'
         }
 
         query_output = cat.run_test_with_query(target_cmd, query_cmd, caliper_config)
@@ -167,13 +153,8 @@ class CaliperBasicTest(unittest.TestCase):
         target_cmd = [ './ci_test_basic' ]
         query_cmd  = [ '../../src/tools/cali-query/cali-query', '-e', '--list-globals' ]
 
-        caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
-            'CALI_RECORDER_FILENAME' : 'stdout',
-        }
-
         t_begin = time.time()
-        query_output = cat.run_test_with_query(target_cmd, query_cmd, caliper_config)
+        query_output = cat.run_test_with_query(target_cmd, query_cmd, {'CALI_CONFIG': 'event-trace,output=stdout'})
         t_end = time.time()
 
         snapshots = cat.get_snapshots_from_text(query_output)
@@ -194,12 +175,7 @@ class CaliperBasicTest(unittest.TestCase):
         target_cmd = [ './ci_test_basic' ]
         query_cmd  = [ '../../src/tools/cali-query/cali-query', '-G', '-q', 'select cali.caliper.version format expand' ]
 
-        caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
-            'CALI_RECORDER_FILENAME' : 'stdout',
-        }
-
-        query_output = cat.run_test_with_query(target_cmd, query_cmd, caliper_config)
+        query_output = cat.run_test_with_query(target_cmd, query_cmd, {'CALI_CONFIG': 'event-trace,output=stdout'})
         snapshots = cat.get_snapshots_from_text(query_output)
 
         self.assertEqual(len(snapshots), 1)
@@ -239,12 +215,7 @@ class CaliperBasicTest(unittest.TestCase):
         target_cmd = [ './ci_test_basic', 'newline' ]
         query_cmd  = [ '../../src/tools/cali-query/cali-query', '-j' ]
 
-        caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
-            'CALI_RECORDER_FILENAME' : 'stdout',
-        }
-
-        obj = json.loads( cat.run_test_with_query(target_cmd, query_cmd, caliper_config) )
+        obj = json.loads( cat.run_test_with_query(target_cmd, query_cmd, {'CALI_CONFIG': 'event-trace,output=stdout'}) )
 
         targets = {}
         for rec in obj:
@@ -286,12 +257,10 @@ class CaliperBasicTest(unittest.TestCase):
     def test_property_override(self):
         """ Test CALI_CALIPER_ATTRIBUTE_PROPERTIES variable """
 
-        target_cmd = [ './ci_test_macros' ]
+        target_cmd = [ './ci_test_macros', '0', 'event-trace,output=stdout' ]
         query_cmd  = [ '../../src/tools/cali-query/cali-query', '-e', '--list-attributes' ]
 
         caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
-            'CALI_RECORDER_FILENAME' : 'stdout',
             'CALI_CALIPER_ATTRIBUTE_PROPERTIES' : 'region=process_scope'
         }
 
@@ -315,12 +284,7 @@ class CaliperBasicTest(unittest.TestCase):
 
         target_cmd = [ './ci_test_binding' ]
 
-        caliper_config = {
-            'CALI_CONFIG_PROFILE': 'serial-trace',
-            'CALI_RECORDER_FILENAME': 'stdout'
-        }
-
-        out,_ = cat.run_test(target_cmd, caliper_config)
+        out,_ = cat.run_test(target_cmd, None)
         snapshots,_ = caliperreader.read_caliper_contents(io.StringIO(out.decode()))
 
         self.assertTrue(cat.has_snapshot_with_attributes(
@@ -563,12 +527,7 @@ class CaliperCAPITest(unittest.TestCase):
         query_cmd  = [ '../../src/tools/cali-query/cali-query', '-e', '--list-attributes',
                        '--print-attributes', 'cali.attribute.name,cali.attribute.type,meta-attr' ]
 
-        caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
-            'CALI_RECORDER_FILENAME' : 'stdout',
-        }
-
-        query_output = cat.run_test_with_query(target_cmd, query_cmd, caliper_config)
+        query_output = cat.run_test_with_query(target_cmd, query_cmd, {'CALI_CONFIG': 'event-trace,output=stdout'})
         snapshots = cat.get_snapshots_from_text(query_output)
 
         self.assertTrue(cat.has_snapshot_with_attributes(

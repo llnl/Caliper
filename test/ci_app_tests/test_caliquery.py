@@ -9,16 +9,10 @@ class CaliperCaliQueryTest(unittest.TestCase):
     """ cali-query test cases """
 
     def test_caliquery_args(self):
-        target_cmd = [ './ci_test_macros' ]
+        target_cmd = [ './ci_test_macros', '0', 'event-trace,output=stdout' ]
         query_cmd  = [ '../../src/tools/cali-query/cali-query', '--aggregate', 'count(),sum(time.duration.ns)', '--aggregate-key=loop', '-s', 'iteration#main loop=2,loop=fooloop', '--json' ]
 
-        caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
-            'CALI_RECORDER_FILENAME' : 'stdout',
-            'CALI_LOG_VERBOSITY'     : '0',
-        }
-
-        obj = json.loads( cat.run_test_with_query(target_cmd, query_cmd, caliper_config) )
+        obj = json.loads( cat.run_test_with_query(target_cmd, query_cmd, None) )
 
         self.assertEqual(obj[0]["path"], "main loop/fooloop")
         self.assertEqual(obj[0]["count"], 9)

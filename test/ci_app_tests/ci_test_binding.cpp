@@ -3,6 +3,7 @@
 #include "../../src/caliper/AnnotationBinding.h"
 
 #include "caliper/cali.h"
+#include "caliper/cali-manager.h"
 
 #include <cassert>
 #include <cstring>
@@ -71,8 +72,12 @@ int main(int argc, const char** argv)
     if (argc > 1 && 0 == strcmp(argv[1], "--verbose"))
         TestBinding::set_verbose(true);
 
+    ConfigManager mgr;
+    mgr.add("event-trace,output=stdout");
+    mgr.start();
+
     Caliper c;
-    Channel channel = c.get_channel(0);
+    Channel channel = mgr.get_channel("event-trace")->channel();
 
     AnnotationBinding::make_binding<TestBinding>(&c, &channel);
 
@@ -85,4 +90,6 @@ int main(int argc, const char** argv)
     c.end(default_attr);
     c.end(nested_attr);
     c.end(nested_attr);
+
+    mgr.flush();
 }
