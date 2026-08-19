@@ -113,7 +113,7 @@ void post_init_cb(Caliper* c, Channel* channel)
 // Initialization routine.
 void pthreadservice_initialize(Caliper* c, Channel* chn)
 {
-    auto config = services::init_config_from_spec(chn->config(), pthreadservice_spec);
+    auto config = chn->config().from_spec(pthreadservice_spec);
     forward_parent_region = config.get("forward_parent_region").to_bool();
 
     Attribute subscription_attr = c->get_attribute("subscription_event");
