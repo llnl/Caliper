@@ -104,7 +104,7 @@ public:
 
     static void init(Caliper* c, Channel* chn)
     {
-        ConfigSet config = services::init_config_from_spec(chn->config(), s_spec);
+        ConfigSet config = chn->config().from_spec(s_spec);
 
         std::string cross_cfg = config.get("config").to_string();
         std::string local_cfg = config.get("local_config").to_string();

@@ -28,28 +28,22 @@ extern Attribute subscription_event_attr;
 namespace
 {
 
-const cali::ConfigSet::Entry annotation_binding_configdata[] = {
-    {
-        "include_regions",
-        CALI_TYPE_STRING,
-        "",
-        "Region filter specifying regions to include",
-        "Region filter specifying regions to include",
-    },
-    {
-        "exclude_regions",
-        CALI_TYPE_STRING,
-        "",
-        "Region filter specifying regions to exclude",
-        "Region filter specifying regions to exclude",
-    },
-    { "trigger_attributes",
-      CALI_TYPE_STRING,
-      "",
-      "List of attributes that trigger the annotation binding",
-      "List of attributes that trigger the annotation binding" },
-    cali::ConfigSet::Terminator
-};
+const char* annotation_binding_spec = R"json(
+{"config":[
+{
+ "name": "include_regions",
+ "type": "string",
+ "description": "Region filter specifying regions to include"
+},{
+ "name": "exclude_regions",
+ "type": "string",
+ "description": "Region filter specifying regions to exclude"
+}{
+ "name": "trigger_attributes",
+ "type": "string",
+ "description": "List of attributes that trigger the annotation binding"
+}]}
+)json";
 
 bool has_marker(const Attribute& attr, const Attribute& marker_attr)
 {
@@ -138,7 +132,7 @@ void AnnotationBinding::base_pre_initialize(Caliper* c, Channel* chn)
     const char* tag     = service_tag();
     std::string cfgname = std::string(tag) + "_binding";
 
-    auto cfg = chn->config().init(cfgname.c_str(), ::annotation_binding_configdata);
+    auto cfg = chn->config().from_spec(::annotation_binding_spec, cfgname.c_str());
 
     {
         std::string i_filter = cfg.get("include_regions").to_string();

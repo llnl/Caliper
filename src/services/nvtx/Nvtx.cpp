@@ -6,9 +6,11 @@
 #include "../Services.h"
 
 #include "../../caliper/AnnotationBinding.h"
+#include "../../common/RuntimeConfig.h"
 
 #include "caliper/common/Attribute.h"
 #include "caliper/common/Node.h"
+
 
 #include <nvtx3/nvToolsExt.h>
 
@@ -23,7 +25,7 @@ namespace cali
 
 class NvtxBinding : public AnnotationBinding
 {
-    static const ConfigSet::Entry s_configdata[];
+    static const char* s_spec;
 
     static const uint32_t s_colors[];
     static const int      s_num_colors = 14;
@@ -89,8 +91,7 @@ public:
         name.append(std::to_string(chn->id()));
 
         m_color_attr = c->create_attribute("nvtx.color", CALI_TYPE_UINT, CALI_ATTR_SKIP_EVENTS | CALI_ATTR_HIDDEN);
-
-        m_cycle_colors = chn->config().init("nvtx", s_configdata).get("cycle_colors").to_bool();
+        m_cycle_colors = chn->config().from_spec(s_spec).get("cycle_colors").to_bool();
     }
 
     const char* service_tag() const { return "nvtx"; }
@@ -182,14 +183,18 @@ const uint32_t NvtxBinding::s_colors[] = { 0x0000cc00, 0x000000cc, 0x00cccc00, 0
                                            0x00cc0000, 0x00cccccc, 0x00008800, 0x00000088, 0x00888800,
                                            0x00880088, 0x00008888, 0x00880000, 0x00888888 };
 
-const ConfigSet::Entry NvtxBinding::s_configdata[] = { { "cycle_colors",
-                                                         CALI_TYPE_BOOL,
-                                                         "true",
-                                                         "Use a different color for each annotation entry",
-                                                         "Use a different color for each annotation entry" },
-                                                       ConfigSet::Terminator };
+const char* NvtxBinding::s_spec = R"json(
+{
+ "name": "nvtx",
+ "description": "Forward Caliper regions to NVTX",
+ "config":
+ [
+  { "name": "cycle_colors", "type": "bool", "value": "true", "description": "Use a different color for each region" }
+ ]
+}
+)json";
 
-CaliperService nvtx_service { "nvtx", &AnnotationBinding::make_binding<NvtxBinding> };
+CaliperService nvtx_service { NvtxBinding::s_spec, &AnnotationBinding::make_binding<NvtxBinding> };
 
 // Keep deprecated "nvprof" alias for nvtx service
 CaliperService nvprof_service { "nvprof", &AnnotationBinding::make_binding<NvtxBinding> };

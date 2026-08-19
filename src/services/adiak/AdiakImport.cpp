@@ -289,7 +289,7 @@ const char* spec = R"json(
 
 void register_adiak_import(Caliper* c, Channel* channel)
 {
-    ConfigSet        cfg = services::init_config_from_spec(channel->config(), spec);
+    ConfigSet        cfg = channel->config().from_spec(spec);
     std::vector<int> categories;
 
     for (const std::string& s : cfg.get("categories").to_stringlist())

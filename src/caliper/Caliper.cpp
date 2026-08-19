@@ -136,9 +136,8 @@ void make_default_channel()
 {
     //   Creates default channel (which reads env vars and/or caliper.config)
     // and initializes builtin ConfigManager during initialization
-    RuntimeConfig                            cfg = RuntimeConfig::get_default_config();
-    const RuntimeConfig::config_entry_list_t configdata { { "enable", "" } };
-    std::vector<std::string> services = cfg.init("services", configdata).get("enable").to_stringlist(",:");
+    RuntimeConfig cfg = RuntimeConfig::get_default_config();
+    std::vector<std::string> services = cfg.get("services", "enable").to_stringlist(",:");
 
     Caliper c;
 
@@ -159,7 +158,7 @@ void make_default_channel()
 //
 
 struct cali::ChannelBody {
-    static const ConfigSet::Entry s_configdata[];
+    static const char* s_spec;
 
     cali_id_t   id;
     std::string name;
@@ -176,7 +175,7 @@ struct cali::ChannelBody {
     ChannelBody(cali_id_t _id, const char* _name, const RuntimeConfig& cfg)
         : id(_id), name(_name), is_active(false), config(cfg)
     {
-        ConfigSet cali_cfg = config.init("channel", s_configdata);
+        ConfigSet cali_cfg = config.from_spec(s_spec);
         flush_on_exit = cali_cfg.get("flush_on_exit").to_bool();
     }
 
@@ -188,20 +187,25 @@ struct cali::ChannelBody {
     }
 };
 
-const ConfigSet::Entry cali::ChannelBody::s_configdata[] = {
-    // key, type, value, short description, long description
-    { "config_check",
-      CALI_TYPE_BOOL,
-      "true",
-      "Perform configuration sanity check at initialization",
-      "Perform configuration sanity check at initialization" },
-    { "flush_on_exit",
-      CALI_TYPE_BOOL,
-      "true",
-      "Flush Caliper buffers at program exit",
-      "Flush Caliper buffers at program exit" },
-    ConfigSet::Terminator
-};
+const char* cali::ChannelBody::s_spec = R"json(
+{
+ "name": "channel",
+ "config":
+ [
+  {
+   "name": "config_check",
+   "type": "bool",
+   "value": "true",
+   "description": "Perform configuration sanity check at initialization"
+  },{
+   "name": "flush_on_exit",
+   "type": "bool",
+   "value": "true",
+   "description": "Flush Caliper buffers at program exit"
+  }
+ ]
+}
+)json";
 
 Channel::Channel(cali_id_t id, const char* name, const RuntimeConfig& cfg) : mP(new ChannelBody(id, name, cfg))
 {}
@@ -302,7 +306,7 @@ struct Caliper::GlobalData {
     static volatile sig_atomic_t s_init_lock;
     static std::mutex            s_init_mutex;
 
-    static const ConfigSet::Entry s_configdata[];
+    static const char* s_spec;
 
     // --- data
 
@@ -397,7 +401,7 @@ struct Caliper::GlobalData {
     {
         init_submodules();
 
-        parse_attribute_config(RuntimeConfig::get_default_config().init("caliper", s_configdata));
+        parse_attribute_config(RuntimeConfig::get_default_config().from_spec(s_spec));
 
         if (Log::verbosity() >= 2)
             print_available_services(Log(2).stream() << "Available services: ") << std::endl;
@@ -498,33 +502,24 @@ std::mutex            Caliper::GlobalData::s_init_mutex;
 Caliper::GlobalData::S_GObject                Caliper::GlobalData::gObj;
 thread_local Caliper::GlobalData::S_TLSObject Caliper::GlobalData::tObj;
 
-const ConfigSet::Entry Caliper::GlobalData::s_configdata[] = {
-    // key, type, value, short description, long description
-    { "attribute_properties",
-      CALI_TYPE_STRING,
-      "",
-      "List of attribute property presets",
-      "List of attribute property presets, in the form\n"
-      "  attr=prop1:prop2,attr2=prop1:prop2:prop3,attr3=prop1,...\n"
-      "Attribute property flags are:\n"
-      "  asvalue:       Store values directly in snapshot, not in context tree\n"
-      "  nomerge:       Create dedicated context tree branch, don't merge with other attributes\n"
-      "  process_scope: Process-scope attribute\n"
-      "  thread_scope:  Thread-scope attribute\n"
-      "  task_scope:    Task-scope attribute (currently not supported)\n"
-      "  skip_events:   Do not invoke callback functions for updates\n"
-      "  hidden:        Do not include this attribute in snapshots\n"
-      "  nested:        Values are properly nested with the call stack and other nested attributes\n" },
-    { "attribute_default_scope",
-      CALI_TYPE_STRING,
-      "thread",
-      "Default scope for attributes",
-      "Default scope for attributes. Possible values are\n"
-      "  process:   Process scope\n"
-      "  thread:    Thread scope" },
-
-    ConfigSet::Terminator
-};
+const char* Caliper::GlobalData::s_spec = R"json(
+{
+ "name": "caliper",
+ "config":
+ [
+  {
+   "name": "attribute_properties",
+   "type": "string",
+   "description": "List of attribute property presets, in the form attr1=prop1:prop2,attr2=prop1:prop2:prop3,..."
+  },{
+   "name": "attribute_default_scope",
+   "type": "string",
+   "value": "thread",
+   "description": "Default scope for attributes (process or thread)"
+  }
+ ]
+}
+)json";
 
 namespace
 {

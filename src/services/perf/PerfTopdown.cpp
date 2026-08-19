@@ -427,7 +427,7 @@ class PerfTopdownService
     PerfTopdownService(Caliper* c, Channel* channel)
         : m_level { Level::Top }
     {
-        auto cfg = services::init_config_from_spec(channel->config(), s_spec);
+        auto cfg = channel->config().from_spec(s_spec);
 
         std::string level_str = cfg.get("level").to_string();
         if (level_str == "all")

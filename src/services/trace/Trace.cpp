@@ -272,7 +272,7 @@ class Trace
 
     Trace(Caliper* c, Channel* channel) : dropped_snapshots(0), m_channel { *channel }
     {
-        ConfigSet cfg = services::init_config_from_spec(channel->config(), s_spec);
+        ConfigSet cfg = channel->config().from_spec(s_spec);
 
         init_overflow_policy(cfg.get("buffer_policy").to_string());
         buffersize = cfg.get("buffer_size").to_uint() * 1024 * 1024;

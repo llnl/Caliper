@@ -186,7 +186,7 @@ class UmpireService
 
     UmpireService(Caliper* c, Channel* channel) : m_channel { *channel }, m_root_node(CALI_INV_ID, CALI_INV_ID, Variant())
     {
-        auto config = services::init_config_from_spec(channel->config(), s_spec);
+        auto config = channel->config().from_spec(s_spec);
 
         m_per_allocator_stats = config.get("per_allocator_statistics").to_bool();
         m_record_global_hwm   = config.get("record_highwatermarks").to_bool();

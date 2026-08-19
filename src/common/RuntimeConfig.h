@@ -23,22 +23,11 @@ struct ConfigSetImpl;
 class ConfigSet
 {
     std::shared_ptr<ConfigSetImpl> mP;
-
-    ConfigSet(const std::shared_ptr<ConfigSetImpl>& p);
+    ConfigSet(std::shared_ptr<ConfigSetImpl> p) : mP { p } { }
 
     friend class RuntimeConfig;
 
 public:
-
-    struct Entry {
-        const char*    key;        ///< Variable key
-        cali_attr_type type;       ///< Variable type
-        const char*    value;      ///< (Default) value as string
-        const char*    descr;      ///< One-line description
-        const char*    long_descr; ///< Extensive, multi-line description
-    };
-
-    static constexpr Entry Terminator = { 0, CALI_TYPE_INV, 0, 0, 0 };
 
     constexpr ConfigSet() = default;
 
@@ -53,18 +42,13 @@ class RuntimeConfig
 
 public:
 
-    typedef std::vector<std::pair<std::string, std::string>> config_entry_list_t;
-
     RuntimeConfig();
 
     /// \brief Get config entry with given \a key from given \a set
     StringConverter get(const char* set, const char* key);
 
-    /// \brief Initialize a ConfigSet from ConfigSet::Entry list (old method)
-    ConfigSet init(const char* name, const ConfigSet::Entry* set);
-
-    /// \brief Initialize a ConfigSet
-    ConfigSet init(const char* name, const config_entry_list_t&);
+    /// \brief Initialize a ConfigSet from a JSON spec
+    ConfigSet from_spec(const char* json_spec, const char* set_name = nullptr);
 
     /// \brief Pre-set config entry \a key to \a value.
     ///
@@ -81,7 +65,7 @@ public:
     /// \brief Import config values from the given the \a values map
     void import(const std::map<std::string, std::string>& values);
 
-    bool allow_read_env();
+    bool allow_read_env() const;
 
     /// \brief Enable or disable reading of configuration settings
     ///   from environment variables.

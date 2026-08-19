@@ -17,8 +17,8 @@ using namespace cali;
 struct LogImpl {
     // --- data
 
-    static const char*            s_prefix;
-    static const ConfigSet::Entry s_configdata[];
+    static const char* s_prefix;
+    static const char* s_spec;
 
     static LogImpl* s_instance;
 
@@ -57,7 +57,7 @@ struct LogImpl {
 
     LogImpl() : m_prefix { s_prefix }
     {
-        ConfigSet config = RuntimeConfig::get_default_config().init("log", s_configdata);
+        ConfigSet config = RuntimeConfig::get_default_config().from_spec(s_spec);
 
         m_verbosity = config.get("verbosity").to_int();
         init_stream(config.get("logfile").to_string());
@@ -76,28 +76,26 @@ struct LogImpl {
     }
 };
 
-const char*            LogImpl::s_prefix       = "== CALIPER: ";
-const ConfigSet::Entry LogImpl::s_configdata[] = {
-    // key, type, value, short description, long description
-    { "verbosity",
-      CALI_TYPE_UINT,
-      "0",
-      "Verbosity level",
-      "Verbosity level.\n"
-      "  0: no output\n"
-      "  1: basic informational runtime output\n"
-      "  2: debug output" },
-    { "logfile",
-      CALI_TYPE_STRING,
-      "stderr",
-      "Log file name",
-      "Log file name or output stream. Either one of\n"
-      "   stdout: Standard output stream,\n"
-      "   stderr: Standard error stream,\n"
-      "   none:   No output,\n"
-      " or a log file name." },
-    ConfigSet::Terminator
-};
+const char* LogImpl::s_prefix = "== CALIPER: ";
+const char* LogImpl::s_spec = R"json(
+{
+ "name": "log",
+ "config":
+ [
+  {
+   "name": "verbosity",
+   "type": "uint",
+   "value": "0",
+   "description": "Verbosity level"
+  },{
+   "name": "logfile",
+   "type": "string",
+   "value": "stderr",
+   "description": "Log file name or stdout|stderr"
+  }
+ ]
+}
+)json";
 
 LogImpl* LogImpl::s_instance = nullptr;
 

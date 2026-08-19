@@ -9,8 +9,11 @@
 
 #include "caliper/common/Log.h"
 
+#include "../common/RuntimeConfig.h"
+
 #include <cassert>
 #include <cctype>
+#include <map>
 #include <string>
 #include <sstream>
 
@@ -158,10 +161,7 @@ bool register_service(Caliper* c, Channel* channel, const char* name)
 
 void register_configured_services(Caliper* c, Channel* channel)
 {
-    const RuntimeConfig::config_entry_list_t configdata { { "enable", "" } };
-
-    std::vector<std::string> services =
-        channel->config().init("services", configdata).get("enable").to_stringlist(",:");
+    std::vector<std::string> services = channel->config().get("services", "enable").to_stringlist(",:");
 
     ServicesManager* sM = ServicesManager::instance();
 
@@ -189,35 +189,6 @@ std::ostream& print_service_documentation(std::ostream& os, const std::string& n
 std::string get_service_description(const std::string& name)
 {
     return ServicesManager::instance()->get_service_description(name);
-}
-
-ConfigSet init_config_from_spec(RuntimeConfig config, const char* spec)
-{
-    RuntimeConfig::config_entry_list_t list;
-
-    auto dict     = StringConverter(spec).rec_dict();
-    auto spec_itr = dict.find("config");
-    if (spec_itr != dict.end()) {
-        for (const auto& e : spec_itr->second.rec_list()) {
-            auto cfg_dict = e.rec_dict();
-
-            std::string key, val;
-            auto        itr = cfg_dict.find("name");
-            assert(itr != cfg_dict.end() && "config entry name missing");
-            key = itr->second.to_string();
-            itr = cfg_dict.find("value");
-            if (itr != cfg_dict.end())
-                val = itr->second.to_string();
-
-            list.emplace_back(std::make_pair(key, val));
-        }
-    }
-
-    spec_itr = dict.find("name");
-    assert(spec_itr != dict.end() && "service name missing");
-    std::string name = spec_itr->second.to_string();
-
-    return config.init(name.c_str(), list);
 }
 
 } // namespace services

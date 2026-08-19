@@ -175,7 +175,7 @@ class MeasurementTemplateService
         // config set, so the configuration variables for our service are
         // prefixed with "CALI_MEASUREMENT_TEMPLATE_". For example, set
         // "CALI_MEASUREMENT_TEMPLATE_NAMES=a,b" to set "names" to "a,b".
-        ConfigSet config = services::init_config_from_spec(channel->config(), s_spec);
+        ConfigSet config = channel->config().from_spec(s_spec);
 
         //   Read the "names" variable and treat it as a string list
         // (comma-separated list). Returns a std::vector<std::string>.

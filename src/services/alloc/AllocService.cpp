@@ -450,7 +450,7 @@ class AllocService
                 p->meta_vals
             );
 
-        ConfigSet config = services::init_config_from_spec(chn->config(), s_spec);
+        ConfigSet config = chn->config().from_spec(s_spec);
 
         g_resolve_addresses    = config.get("resolve_addresses").to_bool();
         g_track_allocations    = config.get("track_allocations").to_bool();

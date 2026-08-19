@@ -178,7 +178,7 @@ class Callpath
 
     Callpath(Caliper* c, Channel* chn) : callpath_root_node(CALI_INV_ID, CALI_INV_ID, Variant())
     {
-        ConfigSet config = services::init_config_from_spec(chn->config(), s_spec);
+        ConfigSet config = chn->config().from_spec(s_spec);
 
         use_name      = config.get("use_name").to_bool();
         use_addr      = config.get("use_address").to_bool();

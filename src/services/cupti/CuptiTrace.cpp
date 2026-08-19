@@ -1016,7 +1016,7 @@ class CuptiTraceService
         uvm_access_type_attr =
             c->create_attribute("cupti.uvm.access.type", CALI_TYPE_STRING, CALI_ATTR_DEFAULT | CALI_ATTR_SKIP_EVENTS);
 
-        ConfigSet config = services::init_config_from_spec(chn->config(), s_spec);
+        ConfigSet config = chn->config().from_spec(s_spec);
 
         record_host_timestamp = config.get("snapshot_timestamps").to_bool();
         record_host_duration  = config.get("snapshot_duration").to_bool();

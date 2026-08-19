@@ -214,7 +214,7 @@ void sampler_register(Caliper* c, Channel* chn)
         return;
     }
 
-    ConfigSet config = services::init_config_from_spec(chn->config(), spec);
+    ConfigSet config = chn->config().from_spec(spec);
 
     Attribute symbol_class_attr = c->get_attribute("class.symboladdress");
     Variant   v_true(true);

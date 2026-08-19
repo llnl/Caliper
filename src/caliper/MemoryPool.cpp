@@ -20,7 +20,7 @@ struct MemoryPool::MemoryPoolImpl {
 
     const size_t chunksize = 64 * 1024;
 
-    static const ConfigSet::Entry s_configdata[];
+    static const char* s_spec;
 
     struct Chunk {
         unsigned char* ptr;
@@ -100,7 +100,7 @@ struct MemoryPool::MemoryPoolImpl {
     }
 
     MemoryPoolImpl()
-        : m_config { RuntimeConfig::get_default_config().init("memory", s_configdata) },
+        : m_config { RuntimeConfig::get_default_config().from_spec(s_spec) },
           m_total_reserved { 0 },
           m_total_used { 0 }
     {
@@ -121,20 +121,25 @@ struct MemoryPool::MemoryPoolImpl {
 
 // --- Static data initialization
 
-const ConfigSet::Entry MemoryPool::MemoryPoolImpl::s_configdata[] = {
-    // key, type, value, short description, long description
-    { "pool_size",
-      CALI_TYPE_UINT,
-      "1048576",
-      "Initial size of the Caliper memory pool (in bytes)",
-      "Initial size of the Caliper memory pool (in bytes)" },
-    { "can_expand",
-      CALI_TYPE_BOOL,
-      "true",
-      "Allow memory pool to expand at runtime",
-      "Allow memory pool to expand at runtime" },
-    ConfigSet::Terminator
-};
+const char* MemoryPool::MemoryPoolImpl::s_spec = R"json(
+{
+ "name": "memory",
+ "config":
+ [
+  {
+   "name": "pool_size",
+   "type": "uint",
+   "value": "1048576",
+   "description": "Initial size of the Caliper memory pool (bytes)"
+  },{
+   "name": "can_expand",
+   "type": "bool",
+   "value": "true",
+   "description": "Allow memory pool to expand at runtime"
+  }
+ ]
+}
+)json";
 
 // --- MemoryPool public interface
 

@@ -72,7 +72,7 @@ class VariorumService
     std::vector<Attribute> attrs;
 
     // Configuration variables for the variorum service
-    static const ConfigSet::Entry s_configdata[];
+    static const char* s_spec;
 
     struct MeasurementInfo {
         std::string domain;     // Measurement name / ID
@@ -214,7 +214,7 @@ class VariorumService
         // config set, so the configuration variables for our service are
         // prefixed with "CALI_MEASUREMENT_TEMPLATE_". For example, set
         // "CALI_MEASUREMENT_TEMPLATE_NAMES=a,b" to set "names" to "a,b".
-        ConfigSet config = channel->config().init("variorum", s_configdata);
+        ConfigSet config = channel->config().from_spec(s_spec);
 
         // Read the "domains" variable and treat it as a string list
         // (comma-separated list). Returns a std::vector<std::string>.
@@ -285,22 +285,22 @@ public:
     }
 };
 
-const ConfigSet::Entry VariorumService::s_configdata[] = {
-    { "domains",                   // config variable name
-      CALI_TYPE_STRING,            // datatype
-      "",                          // default value
-      "List of domains to record", // short description
-      // long description
-      "List of domains to record (separated by ',')\n"
-      "Example: power_node_watts, power_socket_watts, power_gpu_watts, power_mem_watts" },
-    ConfigSet::Terminator
-};
+const char* VariorumService::s_spec = R"json(
+{
+ "name": "variorum",
+ "description": "Measure power metrics using variorum",
+ "config":
+ [
+  { "name": "domains", "type": "string", "description": "List of domains to record" }
+ ]
+}
+)json";
 
 } // namespace
 
 namespace cali
 {
 
-CaliperService variorum_service = { "variorum", ::VariorumService::register_variorum };
+CaliperService variorum_service = { ::VariorumService::s_spec, ::VariorumService::register_variorum };
 
 } // namespace cali

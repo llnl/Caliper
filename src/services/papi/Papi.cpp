@@ -470,7 +470,7 @@ public:
 
     static void register_papi(Caliper* c, Channel* channel)
     {
-        auto cfg       = services::init_config_from_spec(channel->config(), s_spec);
+        auto cfg       = channel->config().from_spec(s_spec);
         auto eventlist = cfg.get("counters").to_stringlist(",");
 
         bool use_multiplex = cfg.get("enable_multiplexing").to_bool();

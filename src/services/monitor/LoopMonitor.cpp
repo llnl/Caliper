@@ -132,7 +132,7 @@ class LoopMonitor
         start_iteration_attr =
             c->create_attribute("loop.start_iteration", CALI_TYPE_INT, CALI_ATTR_SKIP_EVENTS | CALI_ATTR_ASVALUE);
 
-        ConfigSet config = services::init_config_from_spec(channel->config(), s_spec);
+        ConfigSet config = channel->config().from_spec(s_spec);
 
         iteration_interval = config.get("iteration_interval").to_int();
         time_interval      = config.get("time_interval").to_double();

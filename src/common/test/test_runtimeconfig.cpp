@@ -7,28 +7,31 @@ using namespace cali;
 namespace
 {
 
-const ConfigSet::Entry test_configdata[] = { { "string_val",
-                                               CALI_TYPE_STRING,
-                                               "string-default",
-                                               "Description for the string config entry",
-                                               "Long description for the string config entry" },
-                                             { "list_val",
-                                               CALI_TYPE_STRING,
-                                               "first, second, \"third,but not fourth\"",
-                                               "Description of the list config entry",
-                                               "Long description for the list config entry" },
-                                             { "int_val",
-                                               CALI_TYPE_INT,
-                                               "1337",
-                                               "Description for the int config entry",
-                                               "Long description for the int config entry" },
-                                             { "another_int",
-                                               CALI_TYPE_INT,
-                                               "4242",
-                                               "Description for another int config entry",
-                                               "Long description for another int config entry" },
-
-                                             ConfigSet::Terminator };
+const char* json_spec = R"json(
+{
+ "name": "test",
+ "config":
+ [
+  { 
+   "name": "string_val",
+   "type": "string",
+   "value": "string-default"
+  },{ 
+   "name": "list_val",
+   "type": "string",
+   "value": "first, second, \"third,but not fourth\""
+  },{ 
+   "name": "int_val",
+   "type": "int",
+   "value": "1337"
+  },{ 
+   "name": "another_int",
+   "type": "int",
+   "value": "4242"
+  }
+ ]
+}
+)json";
 
 } // namespace
 
@@ -41,7 +44,7 @@ TEST(RuntimeConfigTest, ConfigFile)
     cfg.preset("CALI_TEST_STRING_VAL", "wrong value!");
     cfg.set("CALI_TEST_INT_VAL", "42");
 
-    ConfigSet config = cfg.init("test", ::test_configdata);
+    ConfigSet config = cfg.from_spec(::json_spec);
 
     EXPECT_EQ(config.get("string_val").to_string(), std::string("profile1 string from file"));
     EXPECT_EQ(config.get("int_val").to_int(), 42);
@@ -55,7 +58,7 @@ TEST(RuntimeConfigTest, ConfigFileProfile2)
     cfg.preset("CALI_CONFIG_FILE", "caliper-common_test.config");
     cfg.set("CALI_CONFIG_PROFILE", "file-profile2");
 
-    ConfigSet config = cfg.init("test", ::test_configdata);
+    ConfigSet config = cfg.from_spec(::json_spec);
 
     EXPECT_EQ(config.get("string_val").to_string(), std::string("string-default"));
     EXPECT_EQ(config.get("int_val").to_int(), 42);

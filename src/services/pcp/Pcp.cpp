@@ -26,7 +26,7 @@ class PcpService
     static int s_pcp_context;
     static int s_num_instances;
 
-    static const ConfigSet::Entry s_configdata[];
+    static const char* s_spec;
 
     struct MetricInfo {
         std::string name;
@@ -207,7 +207,7 @@ public:
 
     static void register_pcp(Caliper* c, Channel* channel)
     {
-        auto metriclist = channel->config().init("pcp", s_configdata).get("metrics").to_stringlist(",");
+        auto metriclist = channel->config().from_spec(s_spec).get("metrics").to_stringlist(",");
 
         if (metriclist.empty()) {
             Log(1).stream() << channel->name() << ": pcp: No metrics specified" << std::endl;
@@ -258,20 +258,22 @@ public:
 int PcpService::s_num_instances = 0;
 int PcpService::s_pcp_context   = -1;
 
-const ConfigSet::Entry PcpService::s_configdata[] = {
-    { "metrics",
-      CALI_TYPE_STRING,
-      "",
-      "List of performance co-pilot metrics to record",
-      "List of performance co-pilot metrics to record, separated by ','" },
-    ConfigSet::Terminator
-};
+const char* PcpService::s_spec = R"json(
+{
+ "name": "pcp",
+ "description": "Record metrics from Performance Co-Pilot",
+ "config":
+ [
+  { "name": "metrics", "type": "string", "description": "List of performance co-pilot metrics to record" }
+ ]
+}
+)json";
 
 } // namespace
 
 namespace cali
 {
 
-CaliperService pcp_service = { "pcp", ::PcpService::register_pcp };
+CaliperService pcp_service = { ::PcpService::s_spec, ::PcpService::register_pcp };
 
 }

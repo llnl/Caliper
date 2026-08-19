@@ -283,7 +283,7 @@ class EventTrigger
         );
         region_count_entry = Entry(region_count_attr, cali_make_variant_from_uint(1));
 
-        ConfigSet cfg = services::init_config_from_spec(channel->config(), s_spec);
+        ConfigSet cfg = channel->config().from_spec(s_spec);
 
         enable_snapshot_info = cfg.get("enable_snapshot_info").to_bool();
         parse_region_level(cfg.get("region_level").to_string());
