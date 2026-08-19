@@ -10,11 +10,8 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
-#include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <iterator>
-#include <map>
 #include <sstream>
 #include <unordered_map>
 #include <vector>
@@ -27,10 +24,8 @@ namespace
 std::string config_var_name(const std::string& name, const std::string& key)
 {
     // make uppercase PREFIX_NAMESPACE_KEY string
-
     std::string str = std::string("CALI_") + name + std::string("_") + key;
     std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-
     return str;
 }
 
