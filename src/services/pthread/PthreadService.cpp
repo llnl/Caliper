@@ -27,10 +27,27 @@ gotcha_wrappee_handle_t orig_pthread_create_handle = 0x0;
 
 Attribute id_attr;
 Attribute master_attr;
+bool forward_parent_region = false;
+
+const char* pthreadservice_spec = R"json(
+{
+ "name": "pthread",
+ "description": "Instrument new threads in pthread_create()",
+ "config":
+ [
+  { "name": "forward_parent_region",
+    "type": "bool",
+    "description": "Forward parent thread's region to child thread on thread creation",
+    "value": "false"
+  }
+ ]
+}
+)json";
 
 struct wrapper_args {
     void* (*fn)(void*);
     void* arg;
+    Entry region_entry;
 };
 
 // Wrapper for the user-provided thread start function.
@@ -41,14 +58,17 @@ void* thread_wrapper(void* arg)
     uint64_t id = static_cast<uint64_t>(pthread_self());
     Caliper  c;
 
+    wrapper_args* wrap = static_cast<wrapper_args*>(arg);
+
     // Check if Caliper is still initialized - it's possible we're past finalization
     if (c) {
         c.set(master_attr, Variant(false));
         c.set(id_attr, Variant(cali_make_variant_from_uint(id)));
+        if (forward_parent_region)
+            c.set_thread_region_entry(wrap->region_entry);
     }
 
-    wrapper_args* wrap = static_cast<wrapper_args*>(arg);
-    void*         ret  = (*(wrap->fn))(wrap->arg);
+    void* ret  = (*(wrap->fn))(wrap->arg);
 
     delete wrap;
     return ret;
@@ -60,7 +80,12 @@ int cali_pthread_create_wrapper(pthread_t* thread, const pthread_attr_t* attr, v
     decltype(&pthread_create) orig_pthread_create =
         reinterpret_cast<decltype(&pthread_create)>(gotcha_get_wrappee(orig_pthread_create_handle));
 
-    return (*orig_pthread_create)(thread, attr, thread_wrapper, new wrapper_args({ fn, arg }));
+    Caliper c;
+    Entry e;
+    if (c)
+        e = c.get_thread_region_entry();
+
+    return (*orig_pthread_create)(thread, attr, thread_wrapper, new wrapper_args({ fn, arg, e }));
 }
 
 void post_init_cb(Caliper* c, Channel* channel)
@@ -88,6 +113,9 @@ void post_init_cb(Caliper* c, Channel* channel)
 // Initialization routine.
 void pthreadservice_initialize(Caliper* c, Channel* chn)
 {
+    auto config = services::init_config_from_spec(chn->config(), pthreadservice_spec);
+    forward_parent_region = config.get("forward_parent_region").to_bool();
+
     Attribute subscription_attr = c->get_attribute("subscription_event");
     Variant   v_true(true);
 
@@ -115,6 +143,6 @@ void pthreadservice_initialize(Caliper* c, Channel* chn)
 namespace cali
 {
 
-CaliperService pthread_service { "pthread", ::pthreadservice_initialize };
+CaliperService pthread_service { ::pthreadservice_spec, ::pthreadservice_initialize };
 
 }

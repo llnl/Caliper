@@ -542,6 +542,13 @@ const char* builtin_gotcha_option_specs = R"json(
  "services": [ "pthread" ],
  "query": { "local": "where pthread.is_master=true" }
 },{
+ "name": "forward_thread_region",
+ "type": "bool",
+ "description": "Forward parent thread's region to child thread on thread creation",
+ "category": "region",
+ "services": [ "pthread" ],
+ "config": { "CALI_PTHREAD_FORWARD_PARENT_REGION": "true" }
+},{
   "name": "io.bytes.written",
   "description": "Report I/O bytes written",
   "type": "bool",
