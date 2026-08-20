@@ -25,8 +25,6 @@ namespace cali
 
 class NvtxBinding : public AnnotationBinding
 {
-    static const char* s_spec;
-
     static const uint32_t s_colors[];
     static const int      s_num_colors = 14;
 
@@ -84,6 +82,8 @@ class NvtxBinding : public AnnotationBinding
     }
 
 public:
+
+    static const char* s_spec;
 
     void initialize(Caliper* c, Channel* chn)
     {
