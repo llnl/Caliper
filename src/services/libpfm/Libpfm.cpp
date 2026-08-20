@@ -83,8 +83,6 @@ class LibpfmService
                                                              { "transaction", PERF_SAMPLE_TRANSACTION },
                                                              { "data_src", PERF_SAMPLE_DATA_SRC } };
 
-    static const char* s_spec;
-
     /*
      * Service configuration variables
      */
@@ -376,7 +374,7 @@ class LibpfmService
 
     bool parse_configset(Caliper* c, Channel* chn)
     {
-        ConfigSet config = chn->config().init("libpfm", s_configdata);
+        ConfigSet config = chn->config().from_spec(s_spec);
 
         enable_sampling = config.get("enable_sampling").to_bool();
         record_counters = config.get("record_counters").to_bool();
@@ -414,7 +412,7 @@ class LibpfmService
 
                     new_attribute = c->create_attribute(
                         attribute_name,
-                        CALI_TYPE_UINT,
+                        CALI_TYPE_ADDR,
                         CALI_ATTR_ASVALUE | CALI_ATTR_SCOPE_THREAD | CALI_ATTR_SKIP_EVENTS,
                         1,
                         &symbol_class_attr,
@@ -428,7 +426,7 @@ class LibpfmService
 
                     new_attribute = c->create_attribute(
                         attribute_name,
-                        CALI_TYPE_UINT,
+                        CALI_TYPE_ADDR,
                         CALI_ATTR_ASVALUE | CALI_ATTR_SCOPE_THREAD | CALI_ATTR_SKIP_EVENTS,
                         1,
                         &memory_class_attr,
@@ -704,6 +702,8 @@ class LibpfmService
 
 public:
 
+    static const char* s_spec;
+
     // Initialization handler
     static void libpfm_service_register(Caliper* c, Channel* chn)
     {
@@ -776,21 +776,21 @@ const char* LibpfmService::s_spec = R"json(
    "name": "sample_attributes",
    "type": "string",
    "description": "List of attributes to record for each sample",
-   "value": "id,time,tid,cpu" 
+   "value": "id,time,tid,cpu"
   },{
    "name": "sample_period",
    "type": "uint",
    "description": "Event sampling period",
-   "value": "200000000" 
+   "value": "20000000"
   },{
    "name": "precise_ip",
    "type": "string",
-   "description": "Lsit of precise IP values for respective events",
-   "value": "0" 
+   "description": "List of precise IP values for respective events",
+   "value": "0"
   },{
    "name": "config1",
    "type": "string",
-   "description": "Extra event configurations",
+   "description": "List of extra event configurations",
    "value": "0" 
   }
  ]

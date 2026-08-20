@@ -26,8 +26,6 @@ class PcpService
     static int s_pcp_context;
     static int s_num_instances;
 
-    static const char* s_spec;
-
     struct MetricInfo {
         std::string name;
         Attribute   attr;
@@ -204,6 +202,8 @@ class PcpService
     }
 
 public:
+
+    static const char* s_spec;
 
     static void register_pcp(Caliper* c, Channel* channel)
     {
