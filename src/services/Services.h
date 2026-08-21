@@ -7,7 +7,7 @@
 #ifndef CALI_SERVICES_H
 #define CALI_SERVICES_H
 
-#include "../common/RuntimeConfig.h"
+#include "../caliper/RuntimeConfig.h"
 
 #include <iostream>
 #include <string>

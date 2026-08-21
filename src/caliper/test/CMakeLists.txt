@@ -9,7 +9,9 @@ set(CALIPER_TEST_SOURCES
   test_metadatatree.cpp
   test_postprocess_snapshot.cpp
   test_c_snapshot.cpp
-  test_regionfilter.cpp)
+  test_regionfilter.cpp
+  test_runtimeconfig.cpp
+)
 
 add_executable(test_caliper ${CALIPER_TEST_SOURCES})
 
@@ -26,5 +28,10 @@ foreach(file ${CALIPER_TEST_JSON_FILES})
       ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       ${CMAKE_CURRENT_BINARY_DIR}/${file})
 endforeach()
+
+add_custom_target(caliper-common_test.config ALL
+  COMMAND ${CMAKE_COMMAND} -E create_symlink
+    ${CMAKE_CURRENT_SOURCE_DIR}/caliper-common_test.config
+    ${CMAKE_CURRENT_BINARY_DIR}/caliper-common_test.config)
 
 add_test(NAME test-caliper COMMAND test_caliper)

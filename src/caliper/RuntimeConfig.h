@@ -7,7 +7,7 @@
 #ifndef CALI_RUNTIMECONFIG_H
 #define CALI_RUNTIMECONFIG_H
 
-#include "StringConverter.h"
+#include "../common/StringConverter.h"
 
 #include "caliper/common/cali_types.h"
 

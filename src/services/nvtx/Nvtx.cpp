@@ -6,7 +6,6 @@
 #include "../Services.h"
 
 #include "../../caliper/AnnotationBinding.h"
-#include "../../common/RuntimeConfig.h"
 
 #include "caliper/common/Attribute.h"
 #include "caliper/common/Node.h"

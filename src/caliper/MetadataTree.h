@@ -5,7 +5,7 @@
 
 #include "caliper/common/Node.h"
 
-#include "../common/RuntimeConfig.h"
+#include "RuntimeConfig.h"
 
 #include "MemoryPool.h"
 

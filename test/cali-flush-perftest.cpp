@@ -16,7 +16,7 @@
 #include <caliper/Caliper.h>
 #include <caliper/cali.h>
 
-#include "../src/common/RuntimeConfig.h"
+#include "../src/caliper/RuntimeConfig.h"
 
 #include "../src/tools/util/Args.h"
 

@@ -7,11 +7,11 @@
 #include "caliper/AnnotationBinding.h"
 
 #include "RegionFilter.h"
+#include "RuntimeConfig.h"
 
 #include "caliper/common/Node.h"
 #include "caliper/common/Log.h"
 
-#include "../common/RuntimeConfig.h"
 
 
 using namespace cali;

@@ -11,7 +11,8 @@
 #include "caliper/SnapshotRecord.h"
 
 #include "../common/CompressedSnapshotRecord.h"
-#include "../common/RuntimeConfig.h"
+
+#include "RuntimeConfig.h"
 
 #include "caliper/common/Log.h"
 #include "caliper/common/Node.h"

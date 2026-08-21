@@ -12,7 +12,7 @@
 #include "caliper/common/Log.h"
 #include "caliper/common/Variant.h"
 
-#include "common/RuntimeConfig.h"
+#include "../../caliper/RuntimeConfig.h"
 
 #include <mpi.h>
 

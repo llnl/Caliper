@@ -3,7 +3,7 @@
 
 #include "MemoryPool.h"
 
-#include "../common/RuntimeConfig.h"
+#include "RuntimeConfig.h"
 
 #include "../common/util/spinlock.hpp"
 #include "../common/util/unitfmt.h"
