@@ -10,7 +10,7 @@
 
 #include "caliper/common/Log.h"
 
-#include "../common/RuntimeConfig.h"
+#include "RuntimeConfig.h"
 
 #include "../services/Services.h"
 

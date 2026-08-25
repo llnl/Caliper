@@ -34,11 +34,13 @@ class CaliperLibpfmTest(unittest.TestCase):
         target_cmd = [ './ci_test_macros', '50', 'none', '100' ]
 
         caliper_config = {
-            'CALI_SERVICES_ENABLE'        : 'event:libpfm:pthread:trace:recorder',
-            'CALI_LIBPFM_ENABLE_SAMPLING' : 'true',
-            'CALI_LIBPFM_RECORD_COUNTERS' : 'false',
-            'CALI_LIBPFM_EVENTS'          : 'instructions',
-            'CALI_RECORDER_FILENAME'      : 'stdout',
+            'CALI_SERVICES_ENABLE'          : 'libpfm:trace:recorder',
+            'CALI_LIBPFM_ENABLE_SAMPLING'   : 'true',
+            'CALI_LIBPFM_RECORD_COUNTERS'   : 'false',
+            'CALI_LIBPFM_EVENTS'            : 'instructions',
+            'CALI_LIBPFM_SAMPLE_PERIOD'     : '1000000',
+            'CALI_LIBPFM_SAMPLE_ATTRIBUTES' : 'ip,time',
+            'CALI_RECORDER_FILENAME'        : 'stdout',
         }
 
         out,_ = calipertest.run_test(target_cmd, caliper_config)

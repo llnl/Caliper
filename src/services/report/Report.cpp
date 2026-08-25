@@ -78,7 +78,7 @@ public:
 
     static void create(Caliper* c, Channel* channel)
     {
-        ConfigSet   config = services::init_config_from_spec(channel->config(), s_spec);
+        ConfigSet   config = channel->config().from_spec(s_spec);
         CalQLParser parser(config.get("config").to_string().c_str());
 
         if (parser.error()) {

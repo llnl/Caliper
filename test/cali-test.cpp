@@ -10,7 +10,7 @@
 
 #include <caliper/common/Variant.h>
 
-#include "../src/common/RuntimeConfig.h"
+#include "../src/caliper/RuntimeConfig.h"
 
 #include <cstdlib>
 #include <cstring>

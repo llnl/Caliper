@@ -127,6 +127,7 @@ class CuptiTraceService
     std::vector<std::string> flush_info_attributes;
 
     Channel channel;
+    ConfigSet m_config;
 
     static CuptiTraceService* s_instance;
 
@@ -761,12 +762,12 @@ class CuptiTraceService
                         << num_correlations_missed << " missed." << std::endl;
     }
 
-    void configure_uvm_recording(const ConfigSet& config)
+    void configure_uvm_recording()
     {
         CUpti_ActivityUnifiedMemoryCounterConfig umcfg[4];
         size_t                                   n = 0;
 
-        if (config.get("uvm_transfers").to_bool()) {
+        if (m_config.get("uvm_transfers").to_bool()) {
             umcfg[n].scope    = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
             umcfg[n].kind     = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_HTOD;
             umcfg[n].deviceId = 0;
@@ -779,7 +780,7 @@ class CuptiTraceService
             umcfg[n].enable   = 1;
             ++n;
         }
-        if (config.get("uvm_pagefaults").to_bool()) {
+        if (m_config.get("uvm_pagefaults").to_bool()) {
             umcfg[n].scope    = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
             umcfg[n].kind     = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_CPU_PAGE_FAULT_COUNT;
             umcfg[n].deviceId = 0;
@@ -805,7 +806,7 @@ class CuptiTraceService
         }
     }
 
-    void enable_cupti_activities(const ConfigSet& config)
+    void enable_cupti_activities()
     {
         struct activity_map_t {
             const char*        name;
@@ -820,10 +821,10 @@ class CuptiTraceService
 
                              { nullptr, CUPTI_ACTIVITY_KIND_INVALID } };
 
-        std::vector<std::string> selection = config.get("activities").to_stringlist();
+        std::vector<std::string> selection = m_config.get("activities").to_stringlist();
 
         if (std::find(selection.begin(), selection.end(), "uvm") != selection.end())
-            configure_uvm_recording(config);
+            configure_uvm_recording();
 
         for (const activity_map_t* act = activity_map; act && act->name; ++act) {
             auto it = std::find(selection.begin(), selection.end(), act->name);
@@ -881,8 +882,7 @@ class CuptiTraceService
 
     void post_init_cb(Caliper* c, Channel* chn)
     {
-        ConfigSet config = services::init_config_from_spec(chn->config(), s_spec);
-        enable_cupti_activities(config);
+        enable_cupti_activities();
 
         CUptiResult res = cuptiActivityRegisterCallbacks(buffer_requested, buffer_completed);
 
@@ -896,7 +896,7 @@ class CuptiTraceService
 
         c->set(starttime_attr, cali_make_variant_from_uint(starttime));
 
-        if (config.get("correlate_context").to_bool()) {
+        if (m_config.get("correlate_context").to_bool()) {
             chn->events().post_begin_evt.connect(
                 [](Caliper* c, ChannelBody* chB, const Attribute& attr, const Variant& value) {
                     s_instance->post_begin_cb(c, chB, attr, value);
@@ -914,10 +914,10 @@ class CuptiTraceService
             });
         }
 
-        flush_on_snapshot = config.get("flush_on_snapshot").to_bool();
+        flush_on_snapshot = m_config.get("flush_on_snapshot").to_bool();
 
         if (flush_on_snapshot) {
-            std::string attr_name = config.get("flush_trigger").to_string();
+            std::string attr_name = m_config.get("flush_trigger").to_string();
             flush_trigger_attr    = c->get_attribute(attr_name);
 
             if (!flush_trigger_attr)
@@ -1016,10 +1016,10 @@ class CuptiTraceService
         uvm_access_type_attr =
             c->create_attribute("cupti.uvm.access.type", CALI_TYPE_STRING, CALI_ATTR_DEFAULT | CALI_ATTR_SKIP_EVENTS);
 
-        ConfigSet config = services::init_config_from_spec(chn->config(), s_spec);
+        m_config = chn->config().from_spec(s_spec);
 
-        record_host_timestamp = config.get("snapshot_timestamps").to_bool();
-        record_host_duration  = config.get("snapshot_duration").to_bool();
+        record_host_timestamp = m_config.get("snapshot_timestamps").to_bool();
+        record_host_duration  = m_config.get("snapshot_duration").to_bool();
 
         if (record_host_duration || record_host_timestamp) {
             int hide_offset = record_host_timestamp ? 0 : CALI_ATTR_HIDDEN;
@@ -1039,7 +1039,7 @@ class CuptiTraceService
             );
         }
 
-        flush_info_attributes = config.get("info_attributes").to_stringlist();
+        flush_info_attributes = m_config.get("info_attributes").to_stringlist();
     }
 
 public:

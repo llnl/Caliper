@@ -64,7 +64,7 @@ public:
 
     static void recorder_register(Caliper* c, Channel* channel)
     {
-        auto cfg = services::init_config_from_spec(channel->config(), s_spec);
+        auto cfg = channel->config().from_spec(s_spec);
         Recorder* instance = new Recorder(channel->name(), cfg);
 
         channel->events().write_output_evt.connect([instance](Caliper* c, ChannelBody* chB, SnapshotView info){

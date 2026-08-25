@@ -189,7 +189,7 @@ class AllocStatsService
     AllocStatsService(Caliper* c, Channel* channel)
         : channel_name { channel->name() }
     {
-        bool record_hwm = services::init_config_from_spec(channel->config(), s_spec).get("record_highwatermark").to_bool();
+        bool record_hwm = channel->config().from_spec(s_spec).get("record_highwatermark").to_bool();
 
         if (record_hwm) {
             hwm_attr = c->create_attribute("alloc.region.highwatermark", CALI_TYPE_UINT,

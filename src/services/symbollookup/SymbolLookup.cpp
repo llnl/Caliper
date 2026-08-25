@@ -260,7 +260,7 @@ class SymbolLookup
     SymbolLookup(Caliper* c, Channel* chn)
         : m_root_node(CALI_INV_ID, CALI_INV_ID, Variant()), m_num_lookups(0), m_num_cached(0), m_num_failed(0)
     {
-        ConfigSet config = services::init_config_from_spec(chn->config(), s_spec);
+        ConfigSet config = chn->config().from_spec(s_spec);
 
         m_addr_attr_names = config.get("attributes").to_stringlist(",:");
 

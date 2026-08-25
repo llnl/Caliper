@@ -6,7 +6,6 @@ set(CALIPER_COMMON_SOURCES
   Log.cpp
   NodeBuffer.cpp
   OutputStream.cpp
-  RuntimeConfig.cpp
   SnapshotBuffer.cpp
   SnapshotTextFormatter.cpp
   StringConverter.cpp

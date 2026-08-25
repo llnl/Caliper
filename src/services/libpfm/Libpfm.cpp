@@ -83,8 +83,6 @@ class LibpfmService
                                                              { "transaction", PERF_SAMPLE_TRANSACTION },
                                                              { "data_src", PERF_SAMPLE_DATA_SRC } };
 
-    static const ConfigSet::Entry s_configdata[];
-
     /*
      * Service configuration variables
      */
@@ -376,7 +374,7 @@ class LibpfmService
 
     bool parse_configset(Caliper* c, Channel* chn)
     {
-        ConfigSet config = chn->config().init("libpfm", s_configdata);
+        ConfigSet config = chn->config().from_spec(s_spec);
 
         enable_sampling = config.get("enable_sampling").to_bool();
         record_counters = config.get("record_counters").to_bool();
@@ -414,7 +412,7 @@ class LibpfmService
 
                     new_attribute = c->create_attribute(
                         attribute_name,
-                        CALI_TYPE_UINT,
+                        CALI_TYPE_ADDR,
                         CALI_ATTR_ASVALUE | CALI_ATTR_SCOPE_THREAD | CALI_ATTR_SKIP_EVENTS,
                         1,
                         &symbol_class_attr,
@@ -428,7 +426,7 @@ class LibpfmService
 
                     new_attribute = c->create_attribute(
                         attribute_name,
-                        CALI_TYPE_UINT,
+                        CALI_TYPE_ADDR,
                         CALI_ATTR_ASVALUE | CALI_ATTR_SCOPE_THREAD | CALI_ATTR_SKIP_EVENTS,
                         1,
                         &memory_class_attr,
@@ -704,6 +702,8 @@ class LibpfmService
 
 public:
 
+    static const char* s_spec;
+
     // Initialization handler
     static void libpfm_service_register(Caliper* c, Channel* chn)
     {
@@ -752,38 +752,56 @@ thread_local LibpfmService::ThreadState LibpfmService::sT;
 Channel        LibpfmService::sC;
 LibpfmService* LibpfmService::sI = nullptr;
 
-const ConfigSet::Entry LibpfmService::s_configdata[] = {
-    { "events", CALI_TYPE_STRING, "cycles", "Event list", "Comma-separated list of events to sample" },
-    { "record_counters",
-      CALI_TYPE_BOOL,
-      "true",
-      "Record counter values (true|false)",
-      "Whether to record event counter values at each snapshot (true|false)" },
-    { "enable_sampling", CALI_TYPE_BOOL, "true", "Enable sampling", "Whether to trigger and record samples" },
-    { "sample_attributes",
-      CALI_TYPE_STRING,
-      "ip,time,tid,cpu",
-      "Sample attributes",
-      "Comma-separated list of attributes to record for each sample" },
-    { "sample_period", CALI_TYPE_UINT, "20000000", "Event sampling periods", "Comma-separated list of event periods" },
-    { "precise_ip",
-      CALI_TYPE_STRING,
-      "0",
-      "Precise IP values for events",
-      "Comma-separated list of precise IP values for respective events" },
-    { "config1",
-      CALI_TYPE_STRING,
-      "0",
-      "Extra event configurations",
-      "Comma-separated list of extra event configuration values for supported events" },
-    ConfigSet::Terminator
-};
+const char* LibpfmService::s_spec = R"json(
+{
+ "name": "libpfm",
+ "description": "Linux perf metrics and sampling service",
+ "config":
+ [
+  {
+   "name": "events",
+   "type": "string",
+   "description": "List of events to record"
+  },{
+   "name": "record_counters",
+   "type": "bool",
+   "description": "Whether to record counter values",
+   "value": "true",
+  },{
+   "name": "enable_sampling",
+   "type": "bool",
+   "description": "Whether to trigger and record samples",
+   "value": "true"
+  },{
+   "name": "sample_attributes",
+   "type": "string",
+   "description": "List of attributes to record for each sample",
+   "value": "id,time,tid,cpu"
+  },{
+   "name": "sample_period",
+   "type": "uint",
+   "description": "Event sampling period",
+   "value": "20000000"
+  },{
+   "name": "precise_ip",
+   "type": "string",
+   "description": "List of precise IP values for respective events",
+   "value": "0"
+  },{
+   "name": "config1",
+   "type": "string",
+   "description": "List of extra event configurations",
+   "value": "0" 
+  }
+ ]
+}
+)json";
 
 } // namespace
 
 namespace cali
 {
 
-CaliperService libpfm_service = { "libpfm", ::LibpfmService::libpfm_service_register };
+CaliperService libpfm_service = { ::LibpfmService::s_spec, ::LibpfmService::libpfm_service_register };
 
 } // namespace cali

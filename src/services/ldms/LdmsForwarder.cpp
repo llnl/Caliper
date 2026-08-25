@@ -248,7 +248,7 @@ public:
 
     static void create(Caliper* c, Channel* channel)
     {
-        ConfigSet cfg = services::init_config_from_spec(channel->config(), s_spec);
+        ConfigSet cfg = channel->config().from_spec(s_spec);
 
         LdmsForwarder* instance = new LdmsForwarder();
 

@@ -89,8 +89,6 @@ using namespace cali;
 
 class KokkosLookup
 {
-    static const ConfigSet::Entry s_configdata[];
-
     unsigned m_num_spaces = 0;
     unsigned m_num_copies = 0;
 
@@ -310,8 +308,6 @@ class KokkosLookup
 
     KokkosLookup(Caliper* c, Channel* chn) : m_channel(*chn)
     {
-        ConfigSet config = chn->config().init("kokkoslookup", s_configdata);
-
         make_attributes(c);
     }
 
@@ -366,17 +362,6 @@ public:
 
         Log(1).stream() << chn->name() << ": Registered kokkoslookup service" << std::endl;
     }
-};
-
-const ConfigSet::Entry KokkosLookup::s_configdata[] = {
-    {
-        "attributes",
-        CALI_TYPE_STRING,
-        "",
-        "List of address attributes for which to perform kokkos lookup",
-        "List of address attributes for which to perform kokkos lookup",
-    },
-    ConfigSet::Terminator
 };
 
 } // namespace

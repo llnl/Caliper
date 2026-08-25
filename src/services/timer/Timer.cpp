@@ -145,7 +145,7 @@ class TimerService
 
     TimerService(Caliper* c, Channel* chn) : tstart(clock::now())
     {
-        ConfigSet config          = services::init_config_from_spec(chn->config(), s_spec);
+        ConfigSet config          = chn->config().from_spec(s_spec);
         record_inclusive_duration = config.get("inclusive_duration").to_bool();
 
         Attribute unit_attr = c->create_attribute("time.unit", CALI_TYPE_STRING, CALI_ATTR_SKIP_EVENTS);

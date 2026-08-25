@@ -274,9 +274,9 @@ class Aggregate
         check_aggregation_attribute(c, attr);
     }
 
-    void create_thread_cb(Caliper* c) 
+    void create_thread_cb(Caliper* c)
     {
-        acquire_tdb(c, true); 
+        acquire_tdb(c, true);
     }
 
     void release_thread_cb(Caliper* c)
@@ -296,9 +296,9 @@ class Aggregate
 
     Aggregate(Caliper* c, Channel* chn) : m_channel_name { chn->name() }, m_num_dropped_snapshots(0)
     {
-        auto cfg = services::init_config_from_spec(chn->config(), s_spec);        
+        auto cfg = chn->config().from_spec(s_spec);
         m_key_attribute_names = cfg.get("key").to_stringlist(",");
-        
+
         m_tdb_attr = c->create_attribute(
             std::string("aggregate.tdb.") + std::to_string(chn->id()),
             CALI_TYPE_PTR,

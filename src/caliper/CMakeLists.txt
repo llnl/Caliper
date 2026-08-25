@@ -11,6 +11,7 @@ set(CALIPER_RUNTIME_SOURCES
   MetadataTree.cpp
   RegionFilter.cpp
   RegionProfile.cpp
+  RuntimeConfig.cpp
   api.cpp
   builtin_configmanager.cpp
   cali.cpp

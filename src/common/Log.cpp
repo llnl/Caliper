@@ -6,61 +6,54 @@
 
 #include "caliper/common/Log.h"
 
-#include "RuntimeConfig.h"
-
+#include <cstdlib>
 #include <cstring>
-#include <memory>
-#include <map>
+#include <string>
 
 using namespace cali;
 
 struct LogImpl {
     // --- data
 
-    static const char*            s_prefix;
-    static const ConfigSet::Entry s_configdata[];
+    static const char* s_prefix;
 
     static LogImpl* s_instance;
 
     enum class Stream { StdOut, StdErr, None, File };
 
-    ConfigSet m_config;
-
     Stream        m_stream;
     std::ofstream m_ofstream;
     int           m_verbosity;
-
-    std::string m_prefix;
+    std::string   m_prefix;
 
     // --- helpers
 
     void init_stream(const std::string& name)
     {
-        const std::map<std::string, Stream> strmap { { "none", Stream::None },
-                                           { "stdout", Stream::StdOut },
-                                           { "stderr", Stream::StdErr } };
-
-        auto it = strmap.find(name);
-
-        if (it == strmap.end()) {
+        if (name == "stderr")
+            m_stream = Stream::StdErr;
+        else if (name == "stdout")
+            m_stream = Stream::StdOut;
+        else if (name == "none")
+            m_stream = Stream::None;
+        else {
             m_stream = Stream::File;
-
             m_ofstream.open(name);
 
             if (!m_ofstream && m_verbosity > 0)
                 std::cerr << s_prefix << "Could not open log file " << name << std::endl;
-        } else
-            m_stream = it->second;
+        }
     }
 
     // --- interface
 
-    LogImpl() : m_prefix { s_prefix }
+    LogImpl() : m_verbosity { 0 }, m_prefix { s_prefix }
     {
-        ConfigSet config = RuntimeConfig::get_default_config().init("log", s_configdata);
+        char* val = getenv("CALI_LOG_VERBOSITY");
+        m_verbosity = val ? std::max(0, std::stoi(val)) : 0;
 
-        m_verbosity = config.get("verbosity").to_int();
-        init_stream(config.get("logfile").to_string());
+        val = getenv("CALI_LOG_LOGFILE");
+        init_stream(val ? val : "stderr");
     }
 
     std::ostream& get_stream()
@@ -76,28 +69,7 @@ struct LogImpl {
     }
 };
 
-const char*            LogImpl::s_prefix       = "== CALIPER: ";
-const ConfigSet::Entry LogImpl::s_configdata[] = {
-    // key, type, value, short description, long description
-    { "verbosity",
-      CALI_TYPE_UINT,
-      "0",
-      "Verbosity level",
-      "Verbosity level.\n"
-      "  0: no output\n"
-      "  1: basic informational runtime output\n"
-      "  2: debug output" },
-    { "logfile",
-      CALI_TYPE_STRING,
-      "stderr",
-      "Log file name",
-      "Log file name or output stream. Either one of\n"
-      "   stdout: Standard output stream,\n"
-      "   stderr: Standard error stream,\n"
-      "   none:   No output,\n"
-      " or a log file name." },
-    ConfigSet::Terminator
-};
+const char* LogImpl::s_prefix = "== CALIPER: ";
 
 LogImpl* LogImpl::s_instance = nullptr;
 

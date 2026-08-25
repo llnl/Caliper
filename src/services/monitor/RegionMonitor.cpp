@@ -117,7 +117,7 @@ class RegionMonitor
 
     RegionMonitor(Caliper*, Channel* channel) : m_measuring(false), m_skip(0), m_num_measured(0)
     {
-        ConfigSet config = services::init_config_from_spec(channel->config(), s_spec);
+        ConfigSet config = channel->config().from_spec(s_spec);
         m_min_interval   = config.get("time_interval").to_double();
     }
 

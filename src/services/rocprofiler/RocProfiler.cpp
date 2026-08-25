@@ -727,7 +727,7 @@ class RocProfilerService
 
     RocProfilerService(Caliper* c, Channel* channel) : m_channel { *channel }
     {
-        auto config = services::init_config_from_spec(channel->config(), s_spec);
+        auto config = channel->config().from_spec(s_spec);
 
         m_enable_api_callbacks       = config.get("enable_api_callbacks").to_bool();
         m_enable_marker_callbacks    = config.get("enable_marker_callbacks").to_bool();

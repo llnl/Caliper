@@ -114,6 +114,20 @@ These variables can only be set as environment variables.
    interface automatically. When set to "0" or "false" Caliper will not use 
    the OpenMP tools interface. See :ref:`ompt <ompt-service>`
 
+.. envvar:: CALI_LOG_VERBOSITY
+
+   | Verbosity level. Default: 1
+   |   0: No output except for severe errors.
+   |   1: Basic informational runtime output and warning messages.
+   |   2: Debug output. Shows e.g. memory usage of context trees,
+   |   trace buffers, and aggregation database.
+   |   3: More debug output. Shows configuration settings.
+
+.. envvar:: CALI_LOG_LOGFILE
+
+   Log file name, or 'stdout'/'stderr' for streaming to standard out or
+   standard error, respectively. Default: stderr
+
 Configuration variables
 ........................................
 
@@ -131,18 +145,6 @@ CALI_SERVICES_ENABLE
    Comma-separated list of Caliper service modules to enable.
 
    Default: Not set. Caliper will not record performance data.
-
-CALI_LOG_VERBOSITY
-   | Verbosity level. Default: 1
-   |   0: No output except for severe errors.
-   |   1: Basic informational runtime output and warning messages.
-   |   2: Debug output. Shows e.g. memory usage of context trees,
-   |   trace buffers, and aggregation database.
-   |   3: More debug output. Shows configuration settings.
-
-CALI_LOG_LOGFILE
-   Log file name, or 'stdout'/'stderr' for streaming to standard out or
-   standard error, respectively. Default: stderr
 
 CALI_CHANNEL_CONFIG_CHECK
    Perform basic configuration sanity checks. Caliper prints warnings

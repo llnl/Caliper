@@ -77,7 +77,7 @@ void mpi_register(Caliper* c, Channel* chn)
     if (!mpisize_attr)
         mpisize_attr = c->create_attribute("mpi.world.size", CALI_TYPE_INT, CALI_ATTR_GLOBAL | CALI_ATTR_SKIP_EVENTS);
 
-    ConfigSet cfg = services::init_config_from_spec(chn->config(), mpi_service_spec);
+    ConfigSet cfg = chn->config().from_spec(mpi_service_spec);
 
     mpiwrap_init(c, chn, cfg);
 

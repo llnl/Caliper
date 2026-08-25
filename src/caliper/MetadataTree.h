@@ -5,9 +5,9 @@
 
 #include "caliper/common/Node.h"
 
-#include "MemoryPool.h"
+#include "RuntimeConfig.h"
 
-#include "../common/RuntimeConfig.h"
+#include "MemoryPool.h"
 
 #include <atomic>
 
@@ -28,7 +28,7 @@ class MetadataTree
     };
 
     struct GlobalData {
-        static const ConfigSet::Entry s_configdata[];
+        static const char* s_spec;
 
         ConfigSet config;
 

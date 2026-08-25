@@ -383,16 +383,11 @@ class CaliperJSONTest(unittest.TestCase):
     def test_jsonobject(self):
         """ Test json object layout """
 
-        target_cmd = [ './ci_test_macros' ]
+        target_cmd = [ './ci_test_macros', '0', 'event-trace,output=stdout' ]
         query_cmd  = [ '../../src/tools/cali-query/cali-query',
                        '-q', 'SELECT count(),* group by path where region format json(object)' ]
 
-        caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
-            'CALI_RECORDER_FILENAME' : 'stdout',
-        }
-
-        obj = json.loads( cat.run_test_with_query(target_cmd, query_cmd, caliper_config ) )
+        obj = json.loads( cat.run_test_with_query(target_cmd, query_cmd, None) )
 
         self.assertTrue( { 'records', 'globals', 'attributes' }.issubset(set(obj.keys())) )
 
@@ -406,16 +401,11 @@ class CaliperJSONTest(unittest.TestCase):
     def test_jsonobject_pretty(self):
         """ Test json object layout """
 
-        target_cmd = [ './ci_test_macros' ]
+        target_cmd = [ './ci_test_macros', '0', 'event-trace,output=stdout' ]
         query_cmd  = [ '../../src/tools/cali-query/cali-query',
                        '-q', 'SELECT count(),* group by path where region format json(object,pretty)' ]
 
-        caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
-            'CALI_RECORDER_FILENAME' : 'stdout',
-        }
-
-        obj = json.loads( cat.run_test_with_query(target_cmd, query_cmd, caliper_config ) )
+        obj = json.loads( cat.run_test_with_query(target_cmd, query_cmd, None) )
 
         self.assertTrue( { 'records', 'globals', 'attributes' }.issubset(set(obj.keys())) )
 
@@ -429,22 +419,17 @@ class CaliperJSONTest(unittest.TestCase):
     def test_jsontree(self):
         """ Test basic json-tree formatter """
 
-        target_cmd = [ './ci_test_macros' ]
+        target_cmd = [ './ci_test_macros', '0', 'event-trace,output=stdout' ]
         query_cmd  = [ '../../src/tools/cali-query/cali-query',
-                       '-q', 'SELECT count(),sum(time.inclusive.duration.ns),loop,iteration#main\\ loop group by loop,iteration#main\\ loop format json-split' ]
+                       '-q', 'SELECT count(),sum(time.duration.ns),loop,iteration#main\\ loop group by loop,iteration#main\\ loop format json-split' ]
 
-        caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
-            'CALI_RECORDER_FILENAME' : 'stdout',
-        }
-
-        obj = json.loads( cat.run_test_with_query(target_cmd, query_cmd, caliper_config) )
+        obj = json.loads( cat.run_test_with_query(target_cmd, query_cmd, None) )
 
         self.assertTrue( { 'data', 'columns', 'column_metadata', 'nodes' }.issubset(set(obj.keys())) )
 
         columns = obj['columns']
 
-        self.assertEqual( { 'path', 'iteration#main loop', 'count', 'sum#time.inclusive.duration.ns' }, set(columns) )
+        self.assertEqual( { 'path', 'iteration#main loop', 'count', 'sum#time.duration.ns' }, set(columns) )
 
         data = obj['data']
 
@@ -504,12 +489,8 @@ class CaliperJSONTest(unittest.TestCase):
         query_cmd  = [ '../../src/tools/cali-query/cali-query',
                        '-q', 'select *,count() format json-split' ]
 
-        caliper_config = {
-            'CALI_CONFIG_PROFILE'    : 'serial-trace',
-            'CALI_RECORDER_FILENAME' : 'stdout',
-        }
 
-        obj = json.loads( cat.run_test_with_query(target_cmd, query_cmd, caliper_config) )
+        obj = json.loads( cat.run_test_with_query(target_cmd, query_cmd, {'CALI_CONFIG': 'event-trace,output=stdout'}) )
 
         columns = obj['columns']
 

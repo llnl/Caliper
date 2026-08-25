@@ -19,7 +19,7 @@ using namespace cali;
 using namespace cali::internal;
 
 MetadataTree::GlobalData::GlobalData(MemoryPool& pool)
-    : config(RuntimeConfig::get_default_config().init("contexttree", s_configdata)),
+    : config(RuntimeConfig::get_default_config().from_spec(s_spec)),
       root(CALI_INV_ID, CALI_INV_ID, Variant()),
       next_block(1),
       node_blocks(0),
@@ -355,19 +355,22 @@ std::ostream& MetadataTree::print_statistics(std::ostream& os) const
 
 std::atomic<MetadataTree::GlobalData*> MetadataTree::mG;
 
-const ConfigSet::Entry MetadataTree::GlobalData::s_configdata[] = {
-    // key, type, value, short description, long description
-    {
-        "nodes_per_block",
-        CALI_TYPE_UINT,
-        "256",
-        "Number of context tree nodes in a node block",
-        "Number of context tree nodes in a node block",
-    },
-    { "num_blocks",
-      CALI_TYPE_UINT,
-      "16384",
-      "Maximum number of context tree node blocks",
-      "Maximum number of context tree node blocks" },
-    ConfigSet::Terminator
-};
+const char* MetadataTree::GlobalData::s_spec = R"json(
+{
+ "name": "contexttree",
+ "config":
+ [
+  {
+   "name": "nodes_per_block",
+   "type": "uint",
+   "value": "256",
+   "description": "Number of context tree nodes in a node block"
+  },{
+   "name": "num_blocks",
+   "type": "uint",
+   "value": "16384",
+   "description": "Number of context tree node blocks"
+  }
+ ]
+}
+)json";

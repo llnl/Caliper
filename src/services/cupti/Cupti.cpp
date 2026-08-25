@@ -387,7 +387,7 @@ class CuptiService
     }
 
     CuptiService(Caliper* c, Channel* chn)
-        : config(services::init_config_from_spec(chn->config(), s_spec)),
+        : config(chn->config().from_spec(s_spec)),
           num_cb(0),
           num_api_cb(0),
           num_resource_cb(0),

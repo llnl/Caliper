@@ -7,7 +7,7 @@
 #ifndef CALI_SERVICES_H
 #define CALI_SERVICES_H
 
-#include "../common/RuntimeConfig.h"
+#include "../caliper/RuntimeConfig.h"
 
 #include <iostream>
 #include <string>
@@ -42,9 +42,6 @@ void add_default_service_specs();
 bool register_service(Caliper* c, Channel* chn, const char* name);
 /// \brief Register all services in the channel config
 void register_configured_services(Caliper* c, Channel* chn);
-
-/// \brief Read and initialize runtime config set from given JSON spec
-ConfigSet init_config_from_spec(RuntimeConfig cfg, const char* spec);
 
 /// \brief Find and print service documentation (description and options)
 std::ostream& print_service_documentation(std::ostream& os, const std::string& name);

@@ -18,8 +18,6 @@ namespace
 
 class ThreadMonitor
 {
-    static const ConfigSet::Entry s_configdata[];
-
     pthread_t monitor_thread;
     bool      thread_running;
 
@@ -120,10 +118,12 @@ class ThreadMonitor
             CALI_ATTR_SCOPE_PROCESS | CALI_ATTR_ASVALUE | CALI_ATTR_SKIP_EVENTS
         );
 
-        sleep_sec = channel.config().init("monitor", s_configdata).get("interval").to_uint();
+        sleep_sec = channel.config().from_spec(s_spec).get("interval").to_uint();
     }
 
 public:
+
+    static const char* s_spec;
 
     static void create(Caliper* c, Channel* channel)
     {
@@ -139,18 +139,22 @@ public:
     }
 };
 
-const ConfigSet::Entry ThreadMonitor::s_configdata[] = { { "interval",
-                                                           CALI_TYPE_INT,
-                                                           "2",
-                                                           "Monitor snapshot interval in seconds.",
-                                                           "Monitor snapshot interval in seconds." },
-                                                         ConfigSet::Terminator };
+const char* ThreadMonitor::s_spec = R"json(
+{
+ "name": "thread_monitor",
+ "description": "Launches a monitoring thread",
+ "config":
+ [
+  { "name": "interval", "type": "uint", "description": "Snapshot interval (sec)" }
+ ]
+}
+)json";
 
 } // namespace
 
 namespace cali
 {
 
-CaliperService thread_monitor_service { "thread_monitor", ::ThreadMonitor::create };
+CaliperService thread_monitor_service { ::ThreadMonitor::s_spec, ::ThreadMonitor::create };
 
 }
