@@ -1083,6 +1083,72 @@ Example:
                 7147              150 main                mainloop
                 8425              115 main                mainloop                  0
 
+.. _proc_status-service:
+
+Proc_Status
+--------------------------------
+
+The proc_status service records process memory usage values from
+``/proc/self/status``. This includes virtual memory size and its
+breakdown (locked, pinned, data, stack, text, shared library, and page
+table memory), resident set size (RSS) and its breakdown (anonymous,
+file-backed, and shared memory), swap usage, and hugetlb memory usage.
+It also records the memory high-water marks (peak virtual memory size
+and peak RSS).
+
+After each snapshot, the service resets the kernel's per-process
+resident set size high-water mark (VmHWM) accounting by writing "5" to
+``/proc/self/clear_refs``. This way, the ``proc_status.vmhwm`` attribute
+reports the peak RSS observed *since the previous snapshot*, rather than
+since process start.
+
+Many of the values in ``/proc/self/status`` are inaccurate, where the
+potential magnitude of the inaccuracy in a given application varies
+across kernel versions. For a more accurate -- but more expensive --
+measurement of resident set size, enable the :ref:`smaps
+<smaps-service>` service.
+
+``/proc/self/status`` and ``/proc/self/clear_refs`` are Linux-specific
+files. If either file cannot be opened, the service will log an error
+and not perform any measurements.
+
+The proc_status service provides the following attributes. Values are
+reported in "kB" by the kernel; actually KiB, i.e., 1024 bytes:
+
++--------------------------+------------------------------------------------------------------------+
+| proc_status.vmpeak       | Peak virtual memory size                                               |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.vmsize       | Current virtual memory size                                            |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.vmlck        | Size of locked memory                                                  |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.vmpin        | Size of pinned memory                                                  |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.vmhwm        | Peak resident set size ("high water mark") since the previous snapshot |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.vmrss        | Resident set size                                                      |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.rssanon      | Resident anonymous memory                                              |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.rssfile      | Resident file mappings                                                 |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.rssshmem     | Resident shared memory (SysV shm, tmpfs, shared anonymous mappings)    |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.vmdata       | Size of the data segment                                               |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.vmstk        | Size of the stack segment                                              |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.vmexe        | Size of the text (code) segment                                        |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.vmlib        | Size of shared library code                                            |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.vmpte        | Size of page table entries                                             |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.vmswap       | Swapped-out anonymous private data, not including shmem swap usage     |
++--------------------------+------------------------------------------------------------------------+
+| proc_status.hugetlbpages | Size of hugetlb memory allocations                                     |
++--------------------------+------------------------------------------------------------------------+
+
 .. _pthread-service:
 
 Pthread
@@ -1278,6 +1344,50 @@ a flat profile of the number of samples per function::
     CALI_SERVICES_ENABLE=report,sampler,symbollookup,trace
     CALI_SAMPLER_FREQUENCY=100
     CALI_REPORT_CONFIG="SELECT source.function#cali.sampler.pc,count() GROUP BY source.function#cali.sampler.pc FORMAT table ORDER BY count DESC"
+
+.. _smaps-service:
+
+Smaps
+--------------------------------
+
+The smaps service records process memory usage values from
+``/proc/self/smaps_rollup``. Notably, this include both resident set
+size (RSS) and proportional set size (PSS); the former charges the
+process for every page regardless of whether it's shared with other
+processes, while the latter charges the process for a given shared page
+in proportion to the total number of processes that share it.  The
+service also records subtotals of shared vs. private memory and clean
+(not modified) vs. dirty (modified) pages.
+
+For the values it reports, the smaps service is more accurate but also
+significantly more expensive than services like :ref:`proc_status
+<proc_status-service>`.  Unlike counters reported in, e.g.,
+``/proc/self/statm`` or ``/proc/self/status`` -- read by the memstat and
+proc_status services, respectively -- the kernel computes values in
+``/proc/self/smaps_rollup`` by walking its virtual memory areas and page
+tables when the file is read.  Consider configuring the :ref:`event
+<event-service>` service to limit which regions trigger snapshots.
+
+``/proc/self/smaps_rollup`` is only available in Linux kernels 4.14 or
+later.  If the file cannot be opened, the service will log an error and
+not perform any measurements.
+
+The smaps service provides the following attributes. Values are
+reported in "kB" by the kernel; actually KiB, i.e., 1024 bytes:
+
++---------------------+---------------------------------------+
+| smaps.rss           | Resident set size                     |
++---------------------+---------------------------------------+
+| smaps.pss           | Proportional set size                 |
++---------------------+---------------------------------------+
+| smaps.shared_clean  | Shared, clean (not modified) memory   |
++---------------------+---------------------------------------+
+| smaps.shared_dirty  | Shared, dirty (modified) memory       |
++---------------------+---------------------------------------+
+| smaps.private_clean | Private, clean (not modified) memory  |
++---------------------+---------------------------------------+
+| smaps.private_dirty | Private, dirty (modified) memory      |
++---------------------+---------------------------------------+
 
 .. _symbollookup-service:
 
