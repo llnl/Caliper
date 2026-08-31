@@ -653,7 +653,101 @@ const char* builtin_gotcha_option_specs = R"json(
   "select
     max(max#mem.vmsize) as VmSize unit pages,max(max#mem.vmrss) as VmRSS unit pages,max(max#mem.data) as Data unit pages"
  }
-}
+},{
+  "name": "mem.sizes",
+  "description": "Memory usage via /proc/self/status",
+  "type": "bool",
+  "category": "metric",
+  "services": [ "proc_status" ],
+  "query":
+  {
+   "local":
+   "let
+     mem.vmpeak=first(max#proc_status.vmpeak,proc_status.vmpeak),
+     mem.vmsize=first(max#proc_status.vmsize,proc_status.vmsize),
+     mem.vmlck=first(max#proc_status.vmlck,proc_status.vmlck),
+     mem.vmpin=first(max#proc_status.vmpin,proc_status.vmpin),
+     mem.vmhwm=first(max#proc_status.vmhwm,proc_status.vmhwm),
+     mem.vmrss=first(max#proc_status.vmrss,proc_status.vmrss),
+     mem.rssanon=first(max#proc_status.rssanon,proc_status.rssanon),
+     mem.rssfile=first(max#proc_status.rssfile,proc_status.rssfile),
+     mem.rssshmem=first(max#proc_status.rssshmem,proc_status.rssshmem),
+     mem.vmdata=first(max#proc_status.vmdata,proc_status.vmdata),
+     mem.vmstk=first(max#proc_status.vmstk,proc_status.vmstk),
+     mem.vmexe=first(max#proc_status.vmexe,proc_status.vmexe),
+     mem.vmlib=first(max#proc_status.vmlib,proc_status.vmlib),
+     mem.vmpte=first(max#proc_status.vmpte,proc_status.vmpte),
+     mem.vmswap=first(max#proc_status.vmswap,proc_status.vmswap),
+     mem.hugetlbpages=first(max#proc_status.hugetlbpages,proc_status.hugetlbpages)
+    select
+     max(mem.vmpeak) as VmPeak unit KiB,
+     max(mem.vmsize) as VmSize unit KiB,
+     max(mem.vmlck) as VmLck unit KiB,
+     max(mem.vmpin) as VmPin unit KiB,
+     max(mem.vmhwm) as VmHWM unit KiB,
+     max(mem.vmrss) as VmRSS unit KiB,
+     max(mem.rssanon) as RssAnon unit KiB,
+     max(mem.rssfile) as RssFile unit KiB,
+     max(mem.rssshmem) as RssShmem unit KiB,
+     max(mem.vmdata) as VmData unit KiB,
+     max(mem.vmstk) as VmStk unit KiB,
+     max(mem.vmexe) as VmExe unit KiB,
+     max(mem.vmlib) as VmLib unit KiB,
+     max(mem.vmpte) as VmPTE unit KiB,
+     max(mem.vmswap) as VmSwap unit KiB,
+     max(mem.hugetlbpages) as HugetlbPages unit KiB",
+   "cross":
+   "select
+     max(max#mem.vmpeak) as VmPeak unit KiB,
+     max(max#mem.vmsize) as VmSize unit KiB,
+     max(max#mem.vmlck) as VmLck unit KiB,
+     max(max#mem.vmpin) as VmPin unit KiB,
+     max(max#mem.vmhwm) as VmHWM unit KiB,
+     max(max#mem.vmrss) as VmRSS unit KiB,
+     max(max#mem.rssanon) as RssAnon unit KiB,
+     max(max#mem.rssfile) as RssFile unit KiB,
+     max(max#mem.rssshmem) as RssShmem unit KiB,
+     max(max#mem.vmdata) as VmData unit KiB,
+     max(max#mem.vmstk) as VmStk unit KiB,
+     max(max#mem.vmexe) as VmExe unit KiB,
+     max(max#mem.vmlib) as VmLib unit KiB,
+     max(max#mem.vmpte) as VmPTE unit KiB,
+     max(max#mem.vmswap) as VmSwap unit KiB,
+     max(max#mem.hugetlbpages) as HugetlbPages unit KiB"
+  }
+ },{
+  "name": "mem.smaps",
+  "description": "Memory usage via /proc/self/smaps_rollup",
+  "type": "bool",
+  "category": "metric",
+  "services": [ "smaps" ],
+  "query":
+  {
+   "local":
+   "let
+     mem.rss=first(max#smaps.rss,smaps.rss),
+     mem.pss=first(max#smaps.pss,smaps.pss),
+     mem.shared_clean=first(max#smaps.shared_clean,smaps.shared_clean),
+     mem.shared_dirty=first(max#smaps.shared_dirty,smaps.shared_dirty),
+     mem.private_clean=first(max#smaps.private_clean,smaps.private_clean),
+     mem.private_dirty=first(max#smaps.private_dirty,smaps.private_dirty)
+    select
+     max(mem.rss) as Rss unit KiB,
+     max(mem.pss) as Pss unit KiB,
+     max(mem.shared_clean) as Shared_Clean unit KiB,
+     max(mem.shared_dirty) as Shared_Dirty unit KiB,
+     max(mem.private_clean) as Private_Clean unit KiB,
+     max(mem.private_dirty) as Private_Dirty unit KiB",
+   "cross":
+   "select
+     max(max#mem.rss) as Rss unit KiB,
+     max(max#mem.pss) as Pss unit KiB,
+     max(max#mem.shared_clean) as Shared_Clean unit KiB,
+     max(max#mem.shared_dirty) as Shared_Dirty unit KiB,
+     max(max#mem.private_clean) as Private_Clean unit KiB,
+     max(max#mem.private_dirty) as Private_Dirty unit KiB"
+  }
+ }
 ]
 )json";
 
