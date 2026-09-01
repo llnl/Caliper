@@ -182,6 +182,7 @@ if (WITH_NVTX)
     set(CALIPER_HAVE_NVTX ON)
     set(CALIPER_Nvtx_CMAKE_MSG "Yes, using ${CUDAToolkit_TARGET_DIR}")
     set(CALI_NVTX_INCLUDE_DIRS ${CUDAToolkit_INCLUDE_DIRS})
+    list(APPEND CALIPER_EXTERNAL_LIBS ${CMAKE_DL_LIBS})
   endif()
 endif()
 
