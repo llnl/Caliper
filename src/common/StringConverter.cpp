@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <iterator>
 #include <sstream>
 
 cali_id_t cali::StringConverter::to_id() const
