@@ -6,4 +6,4 @@ set(CALIPER_VTUNE_SOURCES
 add_library(caliper-vtune OBJECT ${CALIPER_VTUNE_SOURCES})
 
 add_service_objlib("caliper-vtune")
-add_caliper_service("vtune CALIPER_HAVE_VTUNE")
+add_caliper_service("vtune")
