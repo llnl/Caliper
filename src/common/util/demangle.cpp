@@ -7,6 +7,7 @@
 #include <cxxabi.h>
 #endif
 
+#include <cstdlib>
 #include <cstring>
 
 namespace cali
