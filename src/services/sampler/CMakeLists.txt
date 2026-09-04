@@ -24,4 +24,4 @@ endif()
 add_library(caliper-sampler OBJECT ${CALIPER_SAMPLER_SOURCES})
 
 add_service_objlib("caliper-sampler")
-add_caliper_service("sampler CALIPER_HAVE_SAMPLER")
+add_caliper_service("sampler")
