@@ -8,4 +8,4 @@ set(CALIPER_LIBPFM_SOURCES
 add_library(caliper-libpfm OBJECT ${CALIPER_LIBPFM_SOURCES})
 
 add_service_objlib("caliper-libpfm")
-add_caliper_service("libpfm CALIPER_HAVE_LIBPFM")
+add_caliper_service("libpfm")

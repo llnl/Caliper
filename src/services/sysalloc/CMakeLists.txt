@@ -6,4 +6,4 @@ set(CALIPER_SYSALLOC_SOURCES
 add_library(caliper-sysalloc OBJECT ${CALIPER_SYSALLOC_SOURCES})
 
 add_service_objlib("caliper-sysalloc")
-add_caliper_service("sysalloc CALIPER_HAVE_GOTCHA")
+add_caliper_service("sysalloc")

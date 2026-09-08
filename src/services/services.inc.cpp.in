@@ -1,0 +1,17 @@
+namespace cali
+{
+
+// list of "extern CaliperService service_name;"
+@CALIPER_SERVICES_DECL_BLOCK@
+
+namespace services
+{
+
+void add_default_service_specs()
+{
+    static const CaliperService services_list[] = { @CALIPER_SERVICES_NAMES_STR@, { nullptr, nullptr }};
+    add_service_specs(services_list);
+}
+
+} // namespace services
+} // namespace cali

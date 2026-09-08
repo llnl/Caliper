@@ -16,4 +16,4 @@ add_service_sources(${CALIPER_SERVICE_TEMPLATE_SOURCES})
 # CaliperService variable name and name element. The second (optional) word
 # is a #ifdef condition in caliper-config.h that must be met for the 
 # service.
-add_caliper_service("measurement_template CALIPER_BUILD_TESTING")
+add_caliper_service("measurement_template")

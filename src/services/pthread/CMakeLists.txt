@@ -6,4 +6,4 @@ set(CALIPER_PTHREAD_SOURCES
 add_library(caliper-pthread OBJECT ${CALIPER_PTHREAD_SOURCES})
 
 add_service_objlib("caliper-pthread")
-add_caliper_service("pthread CALIPER_HAVE_GOTCHA")
+add_caliper_service("pthread")

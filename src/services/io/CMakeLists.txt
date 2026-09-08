@@ -10,4 +10,4 @@ target_include_directories(caliper-ioservice PRIVATE "CurIOus/include")
 add_service_objlib("caliper-ioservice")
 add_service_objlib("caliper-CurIOus")
 
-add_caliper_service("io CALIPER_HAVE_GOTCHA")
+add_caliper_service("io")

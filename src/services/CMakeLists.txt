@@ -18,9 +18,9 @@ macro(add_service_sources)
 endmacro()
 
 macro(add_caliper_service)
-  foreach (_srv ${ARGN})
-    string(REPLACE " " ":" NEW_SERVICE ${_srv})
-    list(APPEND CALIPER_SERVICE_NAMES ${NEW_SERVICE})
+  foreach (_str ${ARGN})
+    string(APPEND _str "_service")
+    list(APPEND CALIPER_SERVICE_NAMES ${_str})
   endforeach()
   set(CALIPER_SERVICE_NAMES ${CALIPER_SERVICE_NAMES} PARENT_SCOPE)
 endmacro()
@@ -122,7 +122,7 @@ endif()
 list(APPEND CALIPER_SERVICES_SOURCES
   LoopStatistics.cpp)
 list(APPEND CALIPER_SERVICE_NAMES
-  "loop_statistics")
+  "loop_statistics_service")
 
 if (CALIPER_BUILD_TESTING)
   add_subdirectory(templates)
@@ -130,17 +130,13 @@ endif()
 
 add_service_sources(Services.cpp)
 
-configure_file(
-   ${CMAKE_CURRENT_SOURCE_DIR}/gen_services_inc.py.in
-   ${CMAKE_CURRENT_BINARY_DIR}/gen_services_inc.py
-)
+list(JOIN CALIPER_SERVICE_NAMES ";\nextern CaliperService " CALIPER_SERVICES_DECL_BLOCK)
+string(PREPEND CALIPER_SERVICES_DECL_BLOCK "extern CaliperService ")
+string(APPEND CALIPER_SERVICES_DECL_BLOCK ";\n")
 
-add_custom_command(
-  OUTPUT services.inc.cpp
-  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/gen_services_inc.py
-  COMMAND ${CALI_PYTHON_EXECUTABLE} gen_services_inc.py
-  COMMENT "Generating services.inc.cpp"
-)
+list(JOIN CALIPER_SERVICE_NAMES ", " CALIPER_SERVICES_NAMES_STR)
+
+configure_file(services.inc.cpp.in services.inc.cpp)
 
 add_custom_target(
   gen-services ALL
