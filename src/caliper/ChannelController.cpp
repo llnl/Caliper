@@ -99,7 +99,9 @@ Channel ChannelController::create()
 
     //   Reset the object's channel pointer if the channel is destroyed
     // behind our back (e.g., in Caliper::release())
-    mP->channel.events().finish_evt.connect([this](Caliper*, Channel*) { mP->channel = Channel(); });
+    //   On second thought, don't do that - address sanitizer pointed out issues
+    // when this callback runs after mP's destructor was already invoked
+    // mP->channel.events().finish_evt.connect([this](Caliper*, Channel*) { mP->channel = Channel(); });
 
     return mP->channel;
 }

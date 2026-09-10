@@ -1426,6 +1426,7 @@ void Caliper::delete_channel(Channel& channel)
     if (it != sG->all_channels.end())
         sG->all_channels.erase(it);
 
+    channel.mP->is_active = false;
     channel.mP->events.finish_evt(this, &channel);
 }
 

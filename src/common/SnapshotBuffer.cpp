@@ -20,8 +20,10 @@ unsigned char* SnapshotBuffer::reserve(size_t min)
     m_reserved_len = 4096 + min * 2;
 
     unsigned char* tmp = new unsigned char[m_reserved_len];
-    memcpy(tmp, m_buffer, m_pos);
-    delete[] m_buffer;
+    if (m_buffer) {
+        memcpy(tmp, m_buffer, m_pos);
+        delete[] m_buffer;
+    }
     m_buffer = tmp;
 
     return m_buffer;

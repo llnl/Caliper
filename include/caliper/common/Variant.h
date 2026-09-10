@@ -72,6 +72,8 @@ public:
     double to_double(bool* okptr = nullptr) const { return cali_variant_to_double(m_v, okptr); }
     cali_attr_type to_attr_type(bool* okptr = nullptr) const { return cali_variant_to_type(m_v, okptr); }
 
+    uint64_t as_uint() const { return m_v.value.v_uint; }
+
     std::string to_string() const;
 
     Variant copy(void* ptr) const
