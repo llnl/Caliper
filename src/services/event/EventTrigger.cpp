@@ -15,6 +15,7 @@
 #include "caliper/common/Node.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <functional>
 #include <map>
@@ -104,9 +105,13 @@ class EventTrigger
             c->create_attribute(std::string("event.end#")+attr.name(), type, flags,
                 1, &trigger_end_attr, &v_id);
 
-        cali_id_t evt_attr_ids[3] = { begin_attr.id(), set_attr.id(), end_attr.id() };
+        std::array<Variant, 3> v_ids = {
+            cali_make_variant_from_uint(begin_attr.id()),
+            cali_make_variant_from_uint(end_attr.id()),
+            cali_make_variant_from_uint(set_attr.id())
+        };
 
-        c->make_tree_entry(marker_attr, Variant(CALI_TYPE_USR, evt_attr_ids, sizeof(evt_attr_ids)), attr.node());
+        c->make_tree_entry(marker_attr, 3, v_ids.data(), attr.node());
 
         Log(2).stream() << channel_name << ": event: Marked attribute " << attr.name() << std::endl;
     }
@@ -159,11 +164,7 @@ class EventTrigger
         }
 
         if (enable_snapshot_info) {
-            assert(!marker_node->data().empty());
-            const cali_id_t* evt_info_attr_ids = static_cast<const cali_id_t*>(marker_node->data().data());
-            assert(evt_info_attr_ids != nullptr);
-
-            Attribute begin_attr = c->get_attribute(evt_info_attr_ids[0]);
+            Attribute begin_attr = c->get_attribute(marker_node->data().as_uint());
 
             // Construct the trigger info entry
             if (attr.store_as_value()) {
@@ -203,11 +204,12 @@ class EventTrigger
         }
 
         if (enable_snapshot_info) {
-            assert(!marker_node->data().empty());
-            const cali_id_t* evt_info_attr_ids = static_cast<const cali_id_t*>(marker_node->data().data());
-            assert(evt_info_attr_ids != nullptr);
+            const Node* node = marker_node->first_child();
+            assert(node != nullptr);
+            node = node->first_child();
+            assert(node != nullptr);
 
-            Attribute set_attr = c->get_attribute(evt_info_attr_ids[1]);
+            Attribute set_attr = c->get_attribute(node->data().as_uint());
 
             // Construct the trigger info entry
             if (attr.store_as_value()) {
@@ -239,11 +241,10 @@ class EventTrigger
         }
 
         if (enable_snapshot_info) {
-            assert(!marker_node->data().empty());
-            const cali_id_t* evt_info_attr_ids = static_cast<const cali_id_t*>(marker_node->data().data());
-            assert(evt_info_attr_ids != nullptr);
+            const Node* node = marker_node->first_child();
+            assert(node != nullptr);
 
-            Attribute end_attr = c->get_attribute(evt_info_attr_ids[2]);
+            Attribute end_attr = c->get_attribute(node->data().as_uint());
 
             // Construct the trigger info entry
             if (attr.store_as_value()) {
@@ -337,7 +338,7 @@ class EventTrigger
             c->create_attribute("cali.event.end", CALI_TYPE_UINT, CALI_ATTR_SKIP_EVENTS | CALI_ATTR_HIDDEN);
         marker_attr = c->create_attribute(
             std::string("event.marker#") + std::to_string(channel->id()),
-            CALI_TYPE_USR,
+            CALI_TYPE_UINT,
             CALI_ATTR_SKIP_EVENTS | CALI_ATTR_HIDDEN
         );
 

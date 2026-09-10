@@ -560,3 +560,67 @@ cali_variant_t cali_variant_unpack(const unsigned char* buf, size_t* inc, bool* 
 
     return v;
 }
+
+size_t cali_variant_serialized_size(cali_variant_t v)
+{
+    size_t ret = 10; /* max 10 bytes for type and size encoding */
+    cali_attr_type type = _EXTRACT_TYPE(v.type_and_size);
+
+    if (type == CALI_TYPE_STRING || type == CALI_TYPE_USR)
+        ret += _EXTRACT_SIZE(v.type_and_size);
+    else
+        ret += 10;
+
+    return ret;
+}
+
+size_t cali_variant_serialize(cali_variant_t v, unsigned char* buf)
+{
+    cali_attr_type type = _EXTRACT_TYPE(v.type_and_size);
+    size_t pos = 0;
+
+    pos += vlenc_u64(v.type_and_size, buf);
+
+    if (type == CALI_TYPE_STRING || type == CALI_TYPE_USR) {
+        size_t size = _EXTRACT_SIZE(v.type_and_size);
+        if (size > 0)
+            memcpy(buf + pos, v.value.unmanaged_const_ptr, size);
+        pos += size;
+    } else {
+        pos += vlenc_u64(v.value.v_uint, buf + pos);
+    }
+
+    return pos;
+}
+
+cali_variant_t cali_variant_deserialize(const unsigned char* buf, size_t* inc, bool* okptr)
+{
+    cali_variant_t v = { 0, { .v_uint = 0 } };
+    size_t         p = 0;
+
+    uint64_t ts = vldec_u64(buf, &p);
+
+    if (_EXTRACT_TYPE(ts) > CALI_MAXTYPE) {
+        if (okptr)
+            *okptr = false;
+
+        return v;
+    }
+
+    v.type_and_size = ts;
+
+    cali_attr_type t = _EXTRACT_TYPE(ts);
+    if (t == CALI_TYPE_STRING || t == CALI_TYPE_USR) {
+        v.value.unmanaged_ptr = (void*) (buf + p);
+        p += _EXTRACT_SIZE(ts);
+    } else {
+        v.value.v_uint = vldec_u64(buf + p, &p);
+    }
+
+    if (inc)
+        *inc += p;
+    if (okptr)
+        *okptr = true;
+
+    return v;
+}

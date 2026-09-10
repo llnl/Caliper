@@ -27,7 +27,7 @@ inline NodeBuffer::NodeInfo make_nodeinfo(const Node* node)
 
 inline size_t max_packed_size(const NodeBuffer::NodeInfo& info)
 {
-    return 50 + info.value.size();
+    return 30 + cali_variant_serialized_size(info.value.c_variant());
 }
 
 size_t pack_node(unsigned char* buf, const NodeBuffer::NodeInfo& info)
@@ -44,12 +44,7 @@ size_t pack_node(unsigned char* buf, const NodeBuffer::NodeInfo& info)
     if (have_parent)
         pos += vlenc_u64(info.parent_id, buf + pos);
 
-    // encode type and size and copy data directly for now
-    pos += vlenc_u64(static_cast<uint64_t>(info.value.type()), buf + pos);
-    pos += vlenc_u64(info.value.size(), buf + pos);
-    memcpy(buf + pos, info.value.data(), info.value.size());
-
-    pos += info.value.size();
+    pos += cali_variant_serialize(info.value.c_variant(), buf + pos);
 
     return pos;
 }
@@ -68,13 +63,8 @@ NodeBuffer::NodeInfo unpack_node(const unsigned char* buf, size_t* inc)
     if (have_parent)
         ret.parent_id = vldec_u64(buf + pos, &pos);
 
-    u                   = vldec_u64(buf + pos, &pos);
-    size_t         size = vldec_u64(buf + pos, &pos);
-    cali_attr_type type = (u <= CALI_MAXTYPE ? static_cast<cali_attr_type>(u) : CALI_TYPE_INV);
+    ret.value = Variant(cali_variant_deserialize(buf + pos, &pos, nullptr));
 
-    ret.value = Variant(type, buf + pos, size);
-
-    pos += size;
     *inc += pos;
 
     return ret;
@@ -89,8 +79,10 @@ unsigned char* NodeBuffer::reserve(size_t min)
     m_reserved_len = 4096 + min * 2;
 
     unsigned char* tmp = new unsigned char[m_reserved_len];
-    memcpy(tmp, m_buffer, m_pos);
-    delete[] m_buffer;
+    if (m_buffer) {
+        memcpy(tmp, m_buffer, m_pos);
+        delete[] m_buffer;
+    }
     m_buffer = tmp;
 
     return m_buffer;

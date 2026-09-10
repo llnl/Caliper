@@ -98,6 +98,7 @@ TEST(ChannelControllerTest, DestroyChannel)
 
     EXPECT_FALSE(testCC.is_active());
     EXPECT_FALSE(testCCref.is_active());
-    EXPECT_TRUE(testCC.channel_is_null());
-    EXPECT_TRUE(testCCref.channel_is_null());
+    // we don't reset the channel pointer anymore because of destruction order issues
+    // EXPECT_TRUE(testCC.channel_is_null());
+    // EXPECT_TRUE(testCCref.channel_is_null());
 }

@@ -126,13 +126,15 @@ inline cali_variant_t cali_make_variant_from_string(const char* value)
     size_t   size = strlen(value);
     uint64_t hash = 0;
 
-    const unsigned char* p = (const unsigned char*) value;
-    hash |= p[0];
-    hash <<= 8;
-    hash |= p[size / 2];
-    hash <<= 8;
-    hash |= p[size - 1];
-    hash <<= 8;
+    if (size > 0) {
+        const unsigned char* p = (const unsigned char*) value;
+        hash |= p[0];
+        hash <<= 8;
+        hash |= p[size / 2];
+        hash <<= 8;
+        hash |= p[size - 1];
+        hash <<= 8;
+    }
 
     cali_variant_t v;
 
@@ -198,12 +200,35 @@ inline bool cali_variant_eq(cali_variant_t lhs, cali_variant_t rhs)
 }
 
 /** \brief Pack variant into byte buffer
+ *
+ * This function packs the variant into \a buf as-is. For string and USR data,
+ * it writes the pointer values. The variant can thus only be un-packed in
+ * the same process.
  */
 size_t cali_variant_pack(cali_variant_t v, unsigned char* buf);
 
 /** \brief Unpack variant from byte buffer
  */
 cali_variant_t cali_variant_unpack(const unsigned char* buf, size_t* inc, bool* okptr);
+
+/**
+ * \brief Return the number of bytes needed to serialize this variant.
+ */
+size_t cali_variant_serialized_size(cali_variant_t v);
+
+/** \brief Serializes variant into byte buffer
+ *
+ * This function serializes the variant into \a buf. String and USR data will
+ * be copied.
+ */
+size_t cali_variant_serialize(cali_variant_t v, unsigned char* buf);
+
+/** \brief Unpack variant from byte buffer
+ *
+ * For string and USR variants, the variant will point to data in \a buf - make sure
+ * \a buf is valid for as long as the variant is alive.
+ */
+cali_variant_t cali_variant_deserialize(const unsigned char* buf, size_t* inc, bool* okptr);
 
 #ifdef __cplusplus
 } /* extern "C" */
