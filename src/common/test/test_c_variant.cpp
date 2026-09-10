@@ -346,3 +346,95 @@ TEST(C_Variant_Test, PackUnpack)
     EXPECT_EQ(cali_variant_to_uint(v_7_bool_in, NULL), cali_variant_to_uint(v_7_bool_out, NULL));
     EXPECT_TRUE(cali_variant_eq(v_7_bool_in, v_7_bool_out));
 }
+
+
+TEST(C_Variant_Test, Serialize)
+{
+    int            val_1_int  = -27;
+    uint64_t       val_2_uint = 0xFFFFFFFFAA;
+    const char*    val_3_str  = "My wonderful test string";
+    double         val_4_dbl  = 42.42;
+    const void*    val_5_inv  = NULL;
+    cali_attr_type val_6_type = CALI_TYPE_ADDR;
+    bool           val_7_bool = true;
+
+    cali_variant_t v_1_int_in  = cali_make_variant_from_int(val_1_int);
+    cali_variant_t v_2_uint_in = cali_make_variant_from_uint(val_2_uint);
+    cali_variant_t v_3_str_in  = cali_make_variant(CALI_TYPE_STRING, val_3_str, strlen(val_3_str) + 1);
+    cali_variant_t v_4_dbl_in  = cali_make_variant_from_double(val_4_dbl);
+    cali_variant_t v_5_inv_in  = cali_make_variant(CALI_TYPE_INV, val_5_inv, 0);
+    cali_variant_t v_6_type_in = cali_make_variant_from_type(val_6_type);
+    cali_variant_t v_7_bool_in = cali_make_variant_from_bool(val_7_bool);
+
+    EXPECT_EQ(cali_variant_serialized_size(v_1_int_in), 20);
+    EXPECT_EQ(cali_variant_serialized_size(v_3_str_in), 10 + cali_variant_get_size(v_3_str_in));
+
+    unsigned char buf[256]; // must be >= 7*20 + string len = 140 + 55 bytes
+    size_t        pos = 0;
+
+    memset(buf, 0xFA, 144);
+
+    pos += cali_variant_serialize(v_1_int_in, buf + pos);
+    pos += cali_variant_serialize(v_2_uint_in, buf + pos);
+    pos += cali_variant_serialize(v_3_str_in, buf + pos);
+    pos += cali_variant_serialize(v_4_dbl_in, buf + pos);
+    pos += cali_variant_serialize(v_5_inv_in, buf + pos);
+    pos += cali_variant_serialize(v_6_type_in, buf + pos);
+    pos += cali_variant_serialize(v_7_bool_in, buf + pos);
+
+    EXPECT_LE(pos, 200);
+
+    bool ok = false;
+    pos     = 0;
+
+    cali_variant_t v_1_int_out = cali_variant_deserialize(buf + pos, &pos, &ok);
+    EXPECT_TRUE(ok && "v_1 deserialize (int)");
+    cali_variant_t v_2_uint_out = cali_variant_deserialize(buf + pos, &pos, &ok);
+    EXPECT_TRUE(ok && "v_2 deserializ (uint)");
+    cali_variant_t v_3_str_out = cali_variant_deserialize(buf + pos, &pos, &ok);
+    EXPECT_TRUE(ok && "v_3 deserializ (str)");
+    cali_variant_t v_4_dbl_out = cali_variant_deserialize(buf + pos, &pos, &ok);
+    EXPECT_TRUE(ok && "v_4 deserializ (dbl)");
+    cali_variant_t v_5_inv_out = cali_variant_deserialize(buf + pos, &pos, &ok);
+    EXPECT_TRUE(ok && "v_5 deserializ (inv)");
+    cali_variant_t v_6_type_out = cali_variant_deserialize(buf + pos, &pos, &ok);
+    EXPECT_TRUE(ok && "v_6 deserializ (type)");
+    cali_variant_t v_7_bool_out = cali_variant_deserialize(buf + pos, &pos, &ok);
+    EXPECT_TRUE(ok && "v_7 deserializ (bool)");
+
+    EXPECT_FALSE(cali_variant_is_empty(v_1_int_out));
+    EXPECT_EQ(cali_variant_get_type(v_1_int_out), CALI_TYPE_INT);
+    EXPECT_EQ(cali_variant_to_int(v_1_int_out, NULL), val_1_int);
+    EXPECT_TRUE(cali_variant_eq(v_1_int_in, v_1_int_out));
+
+    EXPECT_FALSE(cali_variant_is_empty(v_2_uint_out));
+    EXPECT_EQ(cali_variant_get_type(v_2_uint_out), CALI_TYPE_UINT);
+    EXPECT_EQ(cali_variant_to_uint(v_2_uint_out, NULL), val_2_uint);
+    EXPECT_TRUE(cali_variant_eq(v_2_uint_in, v_2_uint_out));
+
+    EXPECT_FALSE(cali_variant_is_empty(v_3_str_out));
+    EXPECT_EQ(cali_variant_get_type(v_3_str_out), CALI_TYPE_STRING);
+    EXPECT_EQ(cali_variant_get_size(v_3_str_out), strlen(val_3_str) + 1);
+    EXPECT_STREQ(static_cast<const char*>(cali_variant_get_data(&v_3_str_out)), val_3_str);
+    EXPECT_TRUE(cali_variant_eq(v_3_str_in, v_3_str_out));
+
+    EXPECT_FALSE(cali_variant_is_empty(v_4_dbl_out));
+    EXPECT_EQ(cali_variant_get_type(v_4_dbl_out), CALI_TYPE_DOUBLE);
+    EXPECT_EQ(cali_variant_to_double(v_4_dbl_out, NULL), val_4_dbl);
+    EXPECT_TRUE(cali_variant_eq(v_4_dbl_in, v_4_dbl_out));
+
+    EXPECT_TRUE(cali_variant_is_empty(v_5_inv_out));
+    EXPECT_EQ(cali_variant_get_type(v_5_inv_out), CALI_TYPE_INV);
+    EXPECT_TRUE(cali_variant_eq(v_5_inv_in, v_5_inv_out));
+
+    EXPECT_FALSE(cali_variant_is_empty(v_6_type_out));
+    EXPECT_EQ(cali_variant_get_type(v_6_type_out), CALI_TYPE_TYPE);
+    EXPECT_EQ(cali_variant_to_type(v_6_type_out, NULL), val_6_type);
+    EXPECT_TRUE(cali_variant_eq(v_6_type_in, v_6_type_out));
+
+    EXPECT_FALSE(cali_variant_is_empty(v_7_bool_out));
+    EXPECT_EQ(cali_variant_get_type(v_7_bool_out), CALI_TYPE_BOOL);
+    EXPECT_TRUE(cali_variant_to_bool(v_7_bool_out, NULL));
+    EXPECT_EQ(cali_variant_to_uint(v_7_bool_in, NULL), cali_variant_to_uint(v_7_bool_out, NULL));
+    EXPECT_TRUE(cali_variant_eq(v_7_bool_in, v_7_bool_out));
+}
