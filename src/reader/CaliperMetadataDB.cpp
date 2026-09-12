@@ -96,7 +96,7 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
         m_nodes[ 8] = new Node( 8, 8, Variant("cali.attribute.name"));
         m_nodes[ 9] = new Node( 9, 8, Variant("cali.attribute.type"));
         m_nodes[10] = new Node(10, 8, Variant("cali.attribute.prop"));
-        
+
         m_type_nodes[CALI_TYPE_STRING]->append(m_nodes[ 8]);
         m_type_nodes[CALI_TYPE_TYPE  ]->append(m_nodes[ 9]);
         m_type_nodes[CALI_TYPE_INT   ]->append(m_nodes[10]);
@@ -163,6 +163,22 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
         return ret;
     }
 
+    Node* check_and_create_attribute_alias_nodes(const std::string& name, Node* parent)
+    {
+        auto unit_it = m_attr_units.find(name);
+        if (unit_it != m_attr_units.end()) {
+            Variant v_unit(static_cast<const char*>(unit_it->second.c_str()));
+            parent = make_tree_entry(1, &m_unit_attr, &v_unit, parent);
+        }
+        auto alias_it = m_attr_aliases.find(name);
+        if (alias_it != m_attr_aliases.end()) {
+            Variant v_alias(static_cast<const char*>(alias_it->second.c_str()));
+            parent = make_tree_entry(1, &m_alias_attr, &v_alias, parent);
+        }
+
+        return parent;
+    }
+
     /// Merge node given by un-mapped node info from stream with given \a idmap into DB
     /// If \a v_data is a string, it must already be in the string database!
     Node* merge_node(cali_id_t node_id, cali_id_t attr_id, cali_id_t prnt_id, const Variant& v_data)
@@ -191,6 +207,10 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
 
             parent = m_nodes[prnt_id];
         }
+
+        // if this is an attribute node, check if we have a new alias for it
+        if (attr_id == Attribute::NAME_ATTR_ID)
+            parent = check_and_create_attribute_alias_nodes(v_data.to_string(), parent);
 
         Node* node     = nullptr;
         bool  new_node = false;
@@ -395,16 +415,7 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
         if (meta > 0)
             parent = make_tree_entry(meta, meta_attr, meta_data, parent);
 
-        auto unit_it = m_attr_units.find(name);
-        if (unit_it != m_attr_units.end()) {
-            Variant v_unit(static_cast<const char*>(unit_it->second.c_str()));
-            parent = make_tree_entry(1, &m_unit_attr, &v_unit, parent);
-        }
-        auto alias_it = m_attr_aliases.find(name);
-        if (alias_it != m_attr_aliases.end()) {
-            Variant v_alias(static_cast<const char*>(alias_it->second.c_str()));
-            parent = make_tree_entry(1, &m_alias_attr, &v_alias, parent);
-        }
+        parent = check_and_create_attribute_alias_nodes(name, parent);
 
         Attribute n_attr[2] = { attribute(Attribute::PROP_ATTR_ID), attribute(Attribute::NAME_ATTR_ID) };
         Variant   n_data[2] = { Variant(prop), make_variant(CALI_TYPE_STRING, name) };
