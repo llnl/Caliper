@@ -7,7 +7,7 @@ then
 fi
 
 ###############################################################################
-# Copyright (c) 2016-25, Lawrence Livermore National Security, LLC and Caliper
+# Copyright (c) 2016-26, Lawrence Livermore National Security, LLC and Caliper
 # project contributors. See the Caliper/LICENSE file for details.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
