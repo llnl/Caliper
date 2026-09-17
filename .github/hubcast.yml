@@ -9,6 +9,6 @@ Repo:
 
   delete_closed: true
 
-  sync_drafts: true
+  sync_drafts: false
 
   sync_drafts_msg: true
