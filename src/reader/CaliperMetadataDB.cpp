@@ -244,6 +244,11 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
 
         Node* node = merge_node(node_id, attr_id, prnt_id, v_data);
 
+        // The overload above returns null for an invalid node or parent id, both of
+        // which a truncated or corrupt .cali file can produce.
+        if (!node)
+            return nullptr;
+
         if (node_id != node->id())
             idmap.insert(std::make_pair(node_id, node->id()));
 
