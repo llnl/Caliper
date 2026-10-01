@@ -86,7 +86,7 @@ class LoopReportController : public cali::internal::CustomOutputController
     Aggregator summary_local_aggregation(Caliper& c, CaliperMetadataDB& db)
     {
         const char* query_str =
-            " let iter_per_sec=ratio(loop.iterations,time.duration.ns,1e-9)"
+            " let iter_per_sec=ratio(loop.iterations,time.duration.ns,1e9)"
             " select loop"
             ",count()"
             ",sum(loop.iterations)"
@@ -94,7 +94,7 @@ class LoopReportController : public cali::internal::CustomOutputController
             ",min(iter_per_sec)"
             ",max(iter_per_sec)"
             ",avg(iter_per_sec)"
-            " group by loop where loop";
+            " group by loop where loop.iterations>0";
 
         std::string query = m_opts.build_query("local", query_str);
 
