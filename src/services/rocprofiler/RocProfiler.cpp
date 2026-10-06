@@ -711,13 +711,6 @@ class RocProfilerService
             }
         }
 
-        ROCPROFILER_CALL(rocprofiler_configure_buffer_dispatch_counting_service(
-            s_counter_ctx,
-            s_activity_buf,
-            dispatch_counter_config_callback,
-            nullptr
-        ));
-
         Log(1).stream() << m_channel.name() << ": rocprofiler: Created counter profiles for "
             << m_counter_profile_map.size() << " agents\n";
 
@@ -853,13 +846,22 @@ public:
             s_activity_buf
         ));
 
+#ifdef CALI_ROCPROFILER_HAVE_COUNTERS
+        ROCPROFILER_CALL(rocprofiler_configure_buffer_dispatch_counting_service(
+            s_counter_ctx,
+            s_activity_buf,
+            dispatch_counter_config_callback,
+            nullptr
+        ));
+#endif
+
         /*
         ROCPROFILER_CALL(
             rocprofiler_configure_buffer_tracing_service(
                 activity_ctx,
                 ROCPROFILER_BUFFER_TRACING_CORRELATION_ID_RETIREMENT,
                 nullptr, 0, activity_buf));
-*/
+        */
         auto external_corr_id_request_kinds = make_array(
             ROCPROFILER_EXTERNAL_CORRELATION_REQUEST_KERNEL_DISPATCH,
             ROCPROFILER_EXTERNAL_CORRELATION_REQUEST_MEMORY_COPY
