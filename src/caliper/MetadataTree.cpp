@@ -8,6 +8,7 @@
 #include "MetadataTree.h"
 
 #include "caliper/common/Attribute.h"
+#include "caliper/common/Log.h"
 #include "caliper/common/Variant.h"
 
 #include "../common/util/spinlock.hpp"
@@ -19,11 +20,12 @@ using namespace cali;
 using namespace cali::internal;
 
 MetadataTree::GlobalData::GlobalData(MemoryPool& pool)
-    : config(RuntimeConfig::get_default_config().from_spec(s_spec)),
-      root(CALI_INV_ID, CALI_INV_ID, Variant()),
-      next_block(1),
-      node_blocks(0),
-      g_mempool(pool)
+    : config { RuntimeConfig::get_default_config().from_spec(s_spec) },
+      root   { CALI_INV_ID, CALI_INV_ID, Variant() },
+      next_block    { 1 },
+      node_blocks   { 0 },
+      skipped_nodes { 0 },
+      g_mempool  { pool }
 {
     num_blocks      = config.get("num_blocks").to_uint();
     nodes_per_block = std::min<uint64_t>(config.get("nodes_per_block").to_uint(), 256);
@@ -48,7 +50,6 @@ MetadataTree::GlobalData::GlobalData(MemoryPool& pool)
 
     for (const auto &t : bootstrap_type_nodes) {
         Node* node = new (chunk + t.id) Node (t.id, 9, cali_make_variant_from_type(t.type));
-        root.append(node);
         type_nodes[t.type] = node;
     }
 
@@ -98,20 +99,18 @@ bool MetadataTree::have_free_nodeblock(size_t n)
     GlobalData* g = mG.load();
 
     if (!m_nodeblock || m_nodeblock->index + n >= g->nodes_per_block) {
-        if (g->next_block.load() >= g->num_blocks)
+        size_t block_index = g->next_block++;
+        if (block_index >= g->num_blocks) {
+            g->skipped_nodes += n;
             return false;
+        }
 
         // allocate new node block
-
         Node* chunk = m_mempool.aligned_alloc<Node>(g->nodes_per_block);
-
-        if (!chunk)
+        if (!chunk) {
+            g->skipped_nodes += n;
             return false;
-
-        size_t block_index = g->next_block++;
-
-        if (block_index >= g->num_blocks)
-            return false;
+        }
 
         m_nodeblock = g->node_blocks + block_index;
 
@@ -133,7 +132,7 @@ Node* MetadataTree::create_path(const Attribute& attr, size_t n, const Variant* 
     // Get a node block with sufficient free space
 
     if (!have_free_nodeblock(n))
-        return 0;
+        return root();
 
     // Calculate and allocate required memory
 
@@ -153,7 +152,7 @@ Node* MetadataTree::create_path(const Attribute& attr, size_t n, const Variant* 
         ptr = static_cast<char*>(m_mempool.allocate(data_size));
 
         if (!ptr)
-            return nullptr;
+            return root();
     }
 
     Node* node = nullptr;
@@ -192,12 +191,15 @@ Node* MetadataTree::create_child(const Attribute& attr, const Variant& value, No
     // Get a node block with sufficient free space
 
     if (!have_free_nodeblock(1))
-        return nullptr;
+        return root();
 
     void* ptr = nullptr;
 
-    if (value.has_unmanaged_data())
+    if (value.has_unmanaged_data()) {
         ptr = m_mempool.allocate(value.size() + 1 /* ensure 0-padding so we can safely hand out string ptrs */);
+        if (!ptr)
+            return root();
+    }
 
     size_t      index = m_nodeblock->index++;
     GlobalData* g     = mG.load();
@@ -215,7 +217,7 @@ Node* MetadataTree::create_child(const Attribute& attr, const Variant& value, No
 
 Node* MetadataTree::get_path(const Attribute& attr, size_t n, const Variant* data, Node* parent = nullptr)
 {
-    Node*  node = parent ? parent : &(mG.load()->root);
+    Node*  node = parent ? parent : root();
     size_t base = 0;
 
     for (size_t i = 0; i < n; ++i) {
@@ -256,7 +258,7 @@ Node* MetadataTree::get_or_copy_node(const Node* from, Node* parent)
 
     if (!node) {
         if (!have_free_nodeblock(1))
-            return nullptr;
+            return root();
 
         size_t index = m_nodeblock->index++;
 
@@ -337,6 +339,11 @@ Node* MetadataTree::get_child(const Attribute& attr, const Variant& val, Node* p
 void MetadataTree::release()
 {
     GlobalData* g = mG.exchange(nullptr);
+    auto skipped_nodes = g->skipped_nodes.load();
+    if (skipped_nodes > 0) {
+        Log().stream() << "Could not create " << skipped_nodes 
+            << " context tree nodes: Caliper data is likely incomplete/corrupt!" << std::endl;
+    }
     delete g;
 }
 

@@ -35,6 +35,7 @@ class MetadataTree
         Node                  root;
         std::atomic<unsigned> next_block;
         NodeBlock*            node_blocks;
+        std::atomic<unsigned> skipped_nodes;
 
         size_t num_blocks;
         size_t nodes_per_block;
