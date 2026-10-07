@@ -62,6 +62,7 @@ struct RuntimeConfig::RuntimeConfigImpl {
     // --- data
 
     bool m_allow_read_env = true;
+    bool m_is_initialized = false;
 
     // combined profile: initially receives settings made through "add" API,
     // then merges all selected profiles in here
@@ -70,9 +71,6 @@ struct RuntimeConfig::RuntimeConfigImpl {
     // top-priority profile: receives all settings made through "set" API
     // that overwrite other settings
     ::config_profile_t m_top_profile;
-
-    // DB of initialized config sets
-    std::map<std::string, std::shared_ptr<ConfigSetImpl>> m_database;
 
     // Caliper v1 style named config profiles
     std::map<std::string, ::config_profile_t> m_config_profiles;
@@ -102,6 +100,9 @@ struct RuntimeConfig::RuntimeConfigImpl {
                     val = env_val;
             }
         }
+
+        // store whatever we found in the combined profile
+        m_combined_profile[varname] = val;
 
         return val;
     }
@@ -162,6 +163,9 @@ struct RuntimeConfig::RuntimeConfigImpl {
     // Read initial configuration from Caliper v1 style config files and/or environment
     void init_config_database()
     {
+        if (m_is_initialized)
+            return;
+
         // get config file name
         StringConverter cfg_file_names { find_config_value("config", "file", "caliper.config") };
 
@@ -183,7 +187,6 @@ struct RuntimeConfig::RuntimeConfigImpl {
         // merge all selected profiles
         for (const std::string& profile_name : profile_names) {
             auto it = m_config_profiles.find(profile_name);
-
             if (it == m_config_profiles.end()) {
                 std::cerr << "caliper: error: config profile \"" << profile_name << "\" not defined." << std::endl;
                 continue;
@@ -193,46 +196,20 @@ struct RuntimeConfig::RuntimeConfigImpl {
                 m_combined_profile[p.first] = p.second;
         }
 
-        // put the config settings in the database
-        std::shared_ptr<ConfigSetImpl> config_cfg { new ConfigSetImpl };
-        config_cfg->m_dict["file"] = cfg_file_names;
-        config_cfg->m_dict["profile"] = cfg_profile_names;
-
-        m_database.insert(std::make_pair("config", config_cfg));
+        m_is_initialized = true;
     }
 
     // --- interface
 
     StringConverter get(const std::string& set, const std::string& key)
     {
-        auto db_it = m_database.find(set);
-        if (db_it != m_database.end()) {
-            auto entry_it = db_it->second->m_dict.find(key);
-            if (entry_it != db_it->second->m_dict.end())
-                return entry_it->second;
-        }
-
-        if (m_database.empty())
-            init_config_database();
-
-        StringConverter ret(find_config_value(set, key));
-
-        if (db_it != m_database.end())
-            db_it->second->m_dict[key] = ret;
-        else {
-            std::shared_ptr<ConfigSetImpl> sptr { new ConfigSetImpl };
-            sptr->m_dict[key] = ret;
-            m_database[set] = sptr;
-        }
-
-        m_database[set]->m_dict[key] = ret;
-        return ret;
+        init_config_database();
+        return StringConverter(find_config_value(set, key));
     }
 
     std::shared_ptr<ConfigSetImpl> from_spec(const char* json_spec, const char* set_name_p)
     {
-        if (m_database.empty())
-            init_config_database();
+        init_config_database();
 
         std::shared_ptr<ConfigSetImpl> ret { new ConfigSetImpl };
 
@@ -266,16 +243,13 @@ struct RuntimeConfig::RuntimeConfigImpl {
             }
         }
 
-        m_database[set_name] = ret;
-
         return ret;
     }
 
     void print(std::ostream& os) const
     {
-        for (auto set : m_database)
-            for (auto entry : set.second->m_dict)
-                os << ::config_var_name(set.first, entry.first) << '=' << entry.second.to_string() << std::endl;
+        for (auto entry : m_combined_profile)
+            os << entry.first << '=' << entry.second << std::endl;
     }
 };
 

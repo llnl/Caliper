@@ -7,6 +7,8 @@
 
 #include "MetadataTree.h"
 
+#include "RuntimeConfig.h"
+
 #include "caliper/common/Attribute.h"
 #include "caliper/common/Log.h"
 #include "caliper/common/Variant.h"
@@ -20,13 +22,14 @@ using namespace cali;
 using namespace cali::internal;
 
 MetadataTree::GlobalData::GlobalData(MemoryPool& pool)
-    : config { RuntimeConfig::get_default_config().from_spec(s_spec) },
-      root   { CALI_INV_ID, CALI_INV_ID, Variant() },
+    : root   { CALI_INV_ID, CALI_INV_ID, Variant() },
       next_block    { 1 },
       node_blocks   { 0 },
       skipped_nodes { 0 },
       g_mempool  { pool }
 {
+    auto config = RuntimeConfig::get_default_config().from_spec(s_spec);
+
     num_blocks      = config.get("num_blocks").to_uint();
     nodes_per_block = std::min<uint64_t>(config.get("nodes_per_block").to_uint(), 256);
 

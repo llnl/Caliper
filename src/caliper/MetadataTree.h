@@ -5,8 +5,6 @@
 
 #include "caliper/common/Node.h"
 
-#include "RuntimeConfig.h"
-
 #include "MemoryPool.h"
 
 #include <atomic>
@@ -29,8 +27,6 @@ class MetadataTree
 
     struct GlobalData {
         static const char* s_spec;
-
-        ConfigSet config;
 
         Node                  root;
         std::atomic<unsigned> next_block;
