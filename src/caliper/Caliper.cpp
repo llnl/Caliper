@@ -175,8 +175,7 @@ struct cali::ChannelBody {
     ChannelBody(cali_id_t _id, const char* _name, const RuntimeConfig& cfg)
         : id(_id), name(_name), is_active(false), config(cfg)
     {
-        ConfigSet cali_cfg = config.from_spec(s_spec);
-        flush_on_exit = cali_cfg.get("flush_on_exit").to_bool();
+        flush_on_exit = config.from_spec(s_spec).get("flush_on_exit").to_bool();
     }
 
     ~ChannelBody()
@@ -372,18 +371,17 @@ struct Caliper::GlobalData {
         Log::fini();
     }
 
-    void parse_attribute_config(const ConfigSet& config)
+    void parse_attribute_config()
     {
+        auto config = RuntimeConfig::get_default_config().from_spec(s_spec);
         auto preset_cfg = config.get("attribute_properties").to_stringlist();
 
         for (const std::string& s : preset_cfg) {
             auto p = s.find_first_of('=');
-
             if (p == std::string::npos)
                 continue;
 
             int prop = cali_string2prop(s.substr(p + 1).c_str());
-
             attribute_prop_presets.insert(make_pair(s.substr(0, p), prop));
         }
 
@@ -400,8 +398,7 @@ struct Caliper::GlobalData {
     void init()
     {
         init_submodules();
-
-        parse_attribute_config(RuntimeConfig::get_default_config().from_spec(s_spec));
+        parse_attribute_config();
 
         if (Log::verbosity() >= 2)
             print_available_services(Log(2).stream() << "Available services: ") << std::endl;

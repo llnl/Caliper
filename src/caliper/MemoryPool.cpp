@@ -28,8 +28,6 @@ struct MemoryPool::MemoryPoolImpl {
         size_t         size;
     };
 
-    ConfigSet m_config;
-
     util::spinlock m_lock;
 
     std::vector<Chunk> m_chunks;
@@ -100,12 +98,13 @@ struct MemoryPool::MemoryPoolImpl {
     }
 
     MemoryPoolImpl()
-        : m_config { RuntimeConfig::get_default_config().from_spec(s_spec) },
-          m_total_reserved { 0 },
+        : m_total_reserved { 0 },
           m_total_used { 0 }
     {
-        m_can_expand = m_config.get("can_expand").to_bool();
-        size_t s     = m_config.get("pool_size").to_uint();
+        auto config = RuntimeConfig::get_default_config().from_spec(s_spec);
+
+        m_can_expand = config.get("can_expand").to_bool();
+        size_t s     = config.get("pool_size").to_uint();
 
         expand(s);
     }
