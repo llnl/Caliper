@@ -19,7 +19,7 @@ void recursive_append_path(
     std::set<cali_id_t>&                  written_nodes
 )
 {
-    if (!node || node->id() == CALI_INV_ID)
+    if (!node || node->id() < 12 || node->id() == CALI_INV_ID)
         return;
     if (written_nodes.count(node->id()) > 0)
         return;

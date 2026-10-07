@@ -35,6 +35,7 @@ class MetadataTree
         Node                  root;
         std::atomic<unsigned> next_block;
         NodeBlock*            node_blocks;
+        std::atomic<unsigned> skipped_nodes;
 
         size_t num_blocks;
         size_t nodes_per_block;
@@ -57,12 +58,11 @@ class MetadataTree
     unsigned m_num_nodes;
     unsigned m_num_blocks;
 
-    bool have_free_nodeblock(size_t n);
+    bool have_free_nodeblock();
 
-    Node* create_path(const Attribute& attr, size_t n, const Variant data[], Node* parent);
-    Node* create_child(const Attribute& attr, const Variant& value, Node* parent);
+    Node* create_child(cali_id_t attr_id, const Variant& value, Node* parent);
     Node* get_or_copy_node(const Node* from, Node* parent = nullptr);
-    Node* copy_path_without_attribute(const Attribute& attr, Node* node, Node* parent);
+    Node* copy_path_without_attribute(cali_id_t attr_id, Node* node, Node* parent);
 
 public:
 
@@ -89,9 +89,7 @@ public:
     Node* get_child(const Attribute& attr, const Variant& val, Node* parent);
 
     Node* remove_first_in_path(Node* path, const Attribute& attr);
-
     Node* replace_first_in_path(Node* path, const Attribute& attr, const Variant& data);
-    Node* replace_all_in_path(Node* path, const Attribute& attr, size_t n, const Variant data[]);
 
     // --- Data access ---
 
