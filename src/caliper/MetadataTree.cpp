@@ -105,7 +105,6 @@ bool MetadataTree::have_free_nodeblock()
             return false;
         }
 
-        // allocate new node block
         Node* chunk = m_mempool.aligned_alloc<Node>(g->nodes_per_block);
         if (!chunk) {
             g->skipped_nodes++;
@@ -129,16 +128,19 @@ bool MetadataTree::have_free_nodeblock()
 
 Node* MetadataTree::create_child(cali_id_t attr_id, const Variant& value, Node* parent)
 {
-    if (!have_free_nodeblock())
-        return root();
-
     GlobalData* g = mG.load();
+
+    if (!have_free_nodeblock()) {
+        ++g->skipped_nodes;
+        return root();
+    }
+
     void* ptr = nullptr;
 
     if (value.has_unmanaged_data()) {
         ptr = m_mempool.allocate(value.size() + 1 /* ensure 0-padding so we can safely hand out string ptrs */);
         if (!ptr) {
-            g->skipped_nodes++;
+            ++g->skipped_nodes;
             return root();
         }
     }
@@ -192,10 +194,12 @@ Node* MetadataTree::get_or_copy_node(const Node* from, Node* parent)
     Node* node = parent->find_child_node(from->attribute(), from->data());
 
     if (!node) {
-        if (!have_free_nodeblock())
-           return root();
-
         GlobalData* g = mG.load();
+
+        if (!have_free_nodeblock()) {
+            ++g->skipped_nodes;
+            return root();
+        }
 
         size_t index = m_nodeblock->index++;
         node = new (m_nodeblock->chunk + index)

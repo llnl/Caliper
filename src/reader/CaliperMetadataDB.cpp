@@ -88,7 +88,6 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
 
         for (const auto &t : bootstrap_type_nodes) {
             Node* node = new Node(t.id, 9, cali_make_variant_from_type(t.type));
-            m_root.append(node);
             m_nodes[t.id] = node;
             m_type_nodes[t.type] = node;
         }
@@ -109,7 +108,6 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
         // NOTE: We assume that m_node_lock is locked!
 
         Node* node = new Node(m_nodes.size(), attr_id, data);
-
         m_nodes.push_back(node);
 
         if (parent)
@@ -179,7 +177,7 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
         return parent;
     }
 
-    /// Merge node given by un-mapped node info from stream with given \a idmap into DB
+    /// Merge node with already-mapped \a attr_id and \a prnt_id into DB
     /// If \a v_data is a string, it must already be in the string database!
     Node* merge_node(cali_id_t node_id, cali_id_t attr_id, cali_id_t prnt_id, const Variant& v_data)
     {
@@ -219,7 +217,6 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
             std::lock_guard<std::mutex> g(m_node_lock);
 
             node = parent->find_child_node(attr_id, v_data);
-
             if (!node) {
                 node     = create_node(attr_id, v_data, parent);
                 new_node = true;
@@ -228,7 +225,6 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
 
         if (new_node && node->attribute() == Attribute::NAME_ATTR_ID) {
             std::lock_guard<std::mutex> g(m_attribute_lock);
-
             m_attributes.insert(std::make_pair(std::string(node->data().to_string()), node));
         }
 
