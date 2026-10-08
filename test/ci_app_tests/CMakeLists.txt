@@ -96,6 +96,27 @@ if (CALIPER_HAVE_MPI)
       list(APPEND PYTHON_SCRIPTS test_tau_service.py)
     endif()
   endif()
+  if (RUN_MULTI_RANK_MPI_TESTS)
+    add_executable(ci_test_multi_rank_mpi
+      ci_test_multi_rank_mpi.cpp
+      ci_test_util.cpp)
+    set(calitest_mpi_include_dirs
+      ${MPI_CXX_INCLUDE_PATH}
+      ${CMAKE_CURRENT_SOURCE_DIR}/../../mpi/include)
+    target_include_directories(ci_test_multi_rank_mpi PRIVATE ${calitest_mpi_include_dirs})
+    target_link_libraries(ci_test_multi_rank_mpi caliper ${MPI_CXX_LIBRARIES})
+    add_test(
+      NAME
+        ci_test_multi_rank_mpi
+      COMMAND
+        ${MPIEXEC_EXECUTABLE}
+        ${MPIEXEC_NUMPROC_FLAG}
+          3
+        ${MPIEXEC_PREFLAGS}
+        ci_test_multi_rank_mpi
+        ${MPIEXEC_POSTFLAGS}
+    )
+  endif()
 endif()
 
 if (CALIPER_HAVE_ROCPROFILER)
