@@ -163,15 +163,18 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
 
     Node* check_and_create_attribute_alias_nodes(const std::string& name, Node* parent)
     {
+        //   Check if we have a unit/alias entry for an attribute named \a name and
+        // create the alias/unit nodes under it if none exist already (attribute
+        // nodes merged from other MPI ranks have them already).
         auto unit_it = m_attr_units.find(name);
-        if (unit_it != m_attr_units.end()) {
+        if (unit_it != m_attr_units.end() && Entry(parent).get(m_unit_attr).empty()) {
             Variant v_unit(static_cast<const char*>(unit_it->second.c_str()));
-            parent = make_tree_entry(1, &m_unit_attr, &v_unit, parent);
+            parent = get_or_create_node(m_unit_attr, v_unit, parent);
         }
         auto alias_it = m_attr_aliases.find(name);
-        if (alias_it != m_attr_aliases.end()) {
+        if (alias_it != m_attr_aliases.end() && Entry(parent).get(m_alias_attr).empty()) {
             Variant v_alias(static_cast<const char*>(alias_it->second.c_str()));
-            parent = make_tree_entry(1, &m_alias_attr, &v_alias, parent);
+            parent = get_or_create_node(m_alias_attr, v_alias, parent);
         }
 
         return parent;
@@ -341,30 +344,32 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
         return ret;
     }
 
+    Node* get_or_create_node(const Attribute& attr, const Variant& data, Node* parent)
+    {
+        std::lock_guard<std::mutex> g(m_node_lock);
+
+        Node* node = parent->find_child_node(attr.id(), data);
+
+        if (!node) {
+            Variant v_value(data);
+
+            if (v_value.type() == CALI_TYPE_STRING)
+                v_value = make_string_variant(static_cast<const char*>(data.data()), data.size());
+
+            node = create_node(attr.id(), v_value, parent);
+        }
+
+        return node;
+    }
+
     Node* make_tree_entry(std::size_t n, const Attribute attr[], const Variant data[], Node* parent = 0)
     {
-        Node* node = nullptr;
-
-        if (!parent)
-            parent = &m_root;
-
-        std::lock_guard<std::mutex> g(m_node_lock);
+        Node* node = parent ? parent : &m_root;
 
         for (size_t i = 0; i < n; ++i) {
             if (attr[i].store_as_value())
                 continue;
-
-            Variant v_data(data[i]);
-
-            if (v_data.type() == CALI_TYPE_STRING)
-                v_data = make_string_variant(static_cast<const char*>(data[i].data()), data[i].size());
-
-            node = parent->find_child_node(attr[i].id(), v_data);
-
-            if (!node)
-                node = create_node(attr[i].id(), v_data, parent);
-
-            parent = node;
+            node = get_or_create_node(attr[i], data[i], node);
         }
 
         return node;
@@ -411,19 +416,16 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
 
         // --- Create attribute
 
-        Node* parent = m_type_nodes[type];
+        Node* node = m_type_nodes[type];
 
         if (meta > 0)
-            parent = make_tree_entry(meta, meta_attr, meta_data, parent);
+            node = make_tree_entry(meta, meta_attr, meta_data, node);
 
-        parent = check_and_create_attribute_alias_nodes(name, parent);
+        node = get_or_create_node(attribute(Attribute::PROP_ATTR_ID), Variant(prop), node);
+        node = check_and_create_attribute_alias_nodes(name, node);
+        node = get_or_create_node(attribute(Attribute::NAME_ATTR_ID), make_string_variant(name.data(), name.size()), node);
 
-        Attribute n_attr[2] = { attribute(Attribute::PROP_ATTR_ID), attribute(Attribute::NAME_ATTR_ID) };
-        Variant   n_data[2] = { Variant(prop), make_variant(CALI_TYPE_STRING, name) };
-
-        Node* node = make_tree_entry(2, n_attr, n_data, parent);
-
-        m_attributes.insert(std::make_pair(std::string(name), node));
+        m_attributes.insert(std::make_pair(name, node));
 
         return Attribute::make_attribute(node);
     }
