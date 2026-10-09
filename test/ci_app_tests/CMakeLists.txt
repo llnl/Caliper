@@ -70,7 +70,7 @@ if (CALIPER_HAVE_SAMPLER AND CALIPER_HAVE_LIBDW AND CALIPER_HAVE_LIBUNWIND)
     test_sampler.py)
 endif()
 
-if (CALIPER_HAVE_OMPT AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.9)
+if (CALIPER_HAVE_OMPT)
   find_package(OpenMP REQUIRED)
   add_executable(ci_test_openmp ci_test_openmp.cpp)
   target_link_libraries(ci_test_openmp caliper OpenMP::OpenMP_CXX)
@@ -143,10 +143,6 @@ endif()
 
 if (WITH_PYTHON_BINDINGS)
   foreach(file ${CALIPER_CI_Python_TEST_APPS})
-    # add_custom_target(${file} ALL
-    #   COMMAND ${CMAKE_COMMAND} -E create_symlink
-    #     ${CMAKE_CURRENT_SOURCE_DIR}/${file}
-    #     ${CMAKE_CURRENT_BINARY_DIR}/${file})
     configure_file(
       ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       ${CMAKE_CURRENT_BINARY_DIR}/${file}
@@ -173,7 +169,3 @@ add_custom_target(caliperreader_link ALL
     ${CMAKE_CURRENT_BINARY_DIR}/caliperreader)
 
 add_test(NAME CI_app_tests COMMAND ${CALI_PYTHON_EXECUTABLE} -B -m unittest discover -p "test_*.py")
-# if (WITH_PYTHON_BINDINGS)
-#   message(STATUS "Adding ${PYPATH_TESTING} to PYTHONPATH for CI_app_tests")
-#   set_tests_properties(CI_app_tests PROPERTIES ENVIRONMENT "PYTHONPATH=${PYPATH_TESTING}")
-# endif()
