@@ -228,7 +228,7 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
 
         if (new_node && node->attribute() == Attribute::NAME_ATTR_ID) {
             std::lock_guard<std::mutex> g(m_attribute_lock);
-            m_attributes.insert(std::make_pair(std::string(node->data().to_string()), node));
+            m_attributes.insert(std::make_pair(node->data().to_string(), node));
         }
 
         return node;
@@ -468,12 +468,14 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
                 != m_globals.end())
                 return;
 
-            auto it = std::find_if(m_globals.begin(), m_globals.end(), [](const Entry& e) { return e.is_reference(); });
+            auto it = std::find_if(m_globals.begin(), m_globals.end(), [](const Entry& e) {
+                    return e.is_reference();
+                });
 
             if (it == m_globals.end() || !attr.is_autocombineable())
-                m_globals.push_back(Entry(make_tree_entry(1, &attr, &value)));
+                m_globals.push_back(Entry(get_or_create_node(attr, value, &m_root)));
             else
-                *it = Entry(make_tree_entry(1, &attr, &value, it->node()));
+                *it = Entry(get_or_create_node(attr, value, it->node()));
         }
     }
 
