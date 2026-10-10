@@ -357,9 +357,8 @@ const char* cali_get_current_region_or(const char* alt)
         return alt;
 
     Entry e = c.get_path_node();
-
     if (!e.empty() && e.value().type() == CALI_TYPE_STRING)
-        return static_cast<const char*>(e.value().data());
+        return e.value().as_c_str();
 
     return alt;
 }

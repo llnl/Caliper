@@ -122,9 +122,8 @@ std::pair<std::shared_ptr<RegionFilter::Filter>, std::string> RegionFilter::pars
 
 bool RegionFilter::match(const Variant& val, const Filter& filter)
 {
-    //   We assume val is a string. Variant strings aren't
-    // 0-terminated, hence the more complicated comparisons
-    const char* strp = static_cast<const char*>(val.data());
+    // We assume val is a string
+    const char* strp = val.as_c_str();
 
     for (const auto& w : filter.startswith)
         if (val.size() >= w.size() && w.compare(0, w.size(), strp, w.size()) == 0)

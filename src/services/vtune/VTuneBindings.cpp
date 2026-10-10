@@ -52,7 +52,7 @@ class ITTBinding : public cali::AnnotationBinding
         __itt_string_handle* itt_str = nullptr;
 
         {
-            const char* str = static_cast<const char*>(val.data());
+            const char* str = val.as_c_str();
             auto        it  = s_itt_strings.lower_bound(str);
 
             if (it == s_itt_strings.end() || it->first != str) {

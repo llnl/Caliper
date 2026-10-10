@@ -29,7 +29,7 @@ const char* Attribute::name_c_str() const
 {
     for (const Node* node = m_node; node; node = node->parent())
         if (node->attribute() == NAME_ATTR_ID)
-            return static_cast<const char*>(node->data().data());
+            return node->data().as_c_str();
 
     return nullptr;
 }
