@@ -162,7 +162,7 @@ public:
         cali_id_t count_attr_id = count_attr.id();
         for (const Entry& e : list)
             if (e.attribute() == count_attr_id) {
-                m_count += e.value().to_uint();
+                m_count += e.value().as_uint();
                 return 1;
             }
 
@@ -217,7 +217,7 @@ public:
         Attribute count_attr = m_config->m_count_attr.get(db);
         for (const Entry& e : list)
             if (e.attribute() == count_attr.id()) {
-                m_count += e.value().to_uint();
+                m_count += e.value().as_uint();
                 return 1;
             }
 
@@ -502,7 +502,7 @@ public:
                 m_sum += e.value();
                 ++count;
             } else if (e.attribute() == count_attr.id()) {
-                m_count += e.value().to_uint();
+                m_count += e.value().as_uint();
                 ++count;
             }
         }
@@ -816,7 +816,7 @@ public:
                 m_sqsum += e.value().to_double();
                 ++count;
             } else if (e.attribute() == stat_attr.count.id()) {
-                m_count += e.value().to_uint();
+                m_count += e.value().as_uint();
                 ++count;
             }
         }

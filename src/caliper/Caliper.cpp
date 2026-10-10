@@ -418,7 +418,7 @@ struct Caliper::GlobalData {
             Variant(CALIPER_VERSION)
         );
 
-        Log(1).stream() << "Initialized" << std::endl;
+        Log(1).stream() << "Caliper v" << CALIPER_VERSION << " initialized" << std::endl;
     }
 
     ThreadData* add_thread_data(ThreadData* t)

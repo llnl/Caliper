@@ -82,12 +82,11 @@ struct CaliWriter::CaliWriterImpl {
 
     void recursive_write_node(const CaliperMetadataAccessInterface& db, cali_id_t id)
     {
-        if (id < 11) // don't write the hard-coded metadata nodes
+        if (id < 12) // don't write the hard-coded metadata nodes
             return;
 
         {
             std::lock_guard<std::mutex> g(m_written_nodes_lock);
-
             if (m_written_nodes.count(id) > 0)
                 return;
         }
@@ -108,14 +107,12 @@ struct CaliWriter::CaliWriterImpl {
             std::lock_guard<std::mutex> g(m_os_lock);
 
             std::ostream* real_os = m_os.stream();
-
             ::write_node_content(*real_os, node);
             ++m_num_written;
         }
 
         {
             std::lock_guard<std::mutex> g(m_written_nodes_lock);
-
             m_written_nodes.insert(id);
         }
     }
@@ -145,7 +142,6 @@ struct CaliWriter::CaliWriterImpl {
             std::lock_guard<std::mutex> g(m_os_lock);
 
             std::ostream* real_os = m_os.stream();
-
             ::write_record_content(*real_os, kind, ref_entries, imm_entries);
             ++m_num_written;
         }
