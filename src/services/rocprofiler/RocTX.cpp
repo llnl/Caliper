@@ -37,7 +37,7 @@ public:
         std::string str; // string obj must not be deleted until end of function
 
         if (attr.type() == CALI_TYPE_STRING) {
-            msg = static_cast<const char*>(value.data());
+            msg = value.as_c_str();
         } else {
             str = value.to_string();
             msg = str.c_str();

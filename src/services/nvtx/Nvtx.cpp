@@ -120,13 +120,13 @@ public:
         eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII;
 
         if (value.type() == CALI_TYPE_STRING) {
-            eventAttrib.message.ascii = static_cast<const char*>(value.data());
+            eventAttrib.message.ascii = value.as_c_str();
         } else {
             std::string attr_name = std::string("nvtx.str#") + std::to_string(attr.id());
             Attribute str_attr = c->create_attribute(attr_name, CALI_TYPE_STRING, CALI_ATTR_HIDDEN | CALI_ATTR_SKIP_EVENTS);
             std::string str = value.to_string();
             Node* node = c->make_tree_entry(str_attr, Variant(CALI_TYPE_STRING, str.data(), str.size()), &m_nvtx_root_node);
-            eventAttrib.message.ascii = static_cast<const char*>(node->data().data());
+            eventAttrib.message.ascii = node->data().as_c_str();
         }
 
         // For properly nested attributes, just use default push/pop.

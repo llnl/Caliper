@@ -63,7 +63,7 @@ std::string Variant::to_string() const
         break;
     case CALI_TYPE_STRING:
         {
-            const char* str = static_cast<const char*>(data());
+            const char* str = as_c_str();
             std::size_t len = size();
 
             if (len && str[len - 1] == 0)
@@ -164,7 +164,7 @@ std::ostream& Variant::write_cali(std::ostream& os)
         util::write_uint64(os, m_v.value.v_uint);
         break;
     case CALI_TYPE_STRING:
-        util::write_cali_esc_string(os, static_cast<const char*>(m_v.value.unmanaged_const_ptr), size());
+        util::write_cali_esc_string(os, as_c_str(), size());
         break;
     case CALI_TYPE_TYPE:
         os << cali_type2string(m_v.value.v_type);

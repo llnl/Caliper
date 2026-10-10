@@ -48,7 +48,7 @@ class LoopMonitor
             return true;
 
         for (const std::string& s : target_loops)
-            if (strncmp(static_cast<const char*>(value.data()), s.data(), s.size()) == 0)
+            if (strncmp(value.as_c_str(), s.data(), s.size()) == 0)
                 return true;
 
         return false;

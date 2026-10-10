@@ -65,13 +65,13 @@ public:
     void on_begin(Caliper*, const Attribute& attr, const Variant& value)
     {
         if (attr.is_nested() && attr.type() == CALI_TYPE_STRING)
-            PAT_region_push(static_cast<const char*>(value.data()));
+            PAT_region_push(value.as_c_str());
     }
 
     void on_end(Caliper*, const Attribute& attr, const Variant& value)
     {
         if (attr.is_nested() && attr.type() == CALI_TYPE_STRING)
-            PAT_region_pop(static_cast<const char*>(value.data()));
+            PAT_region_pop(value.as_c_str());
     }
 
     void initialize(Caliper*, Channel* channel)

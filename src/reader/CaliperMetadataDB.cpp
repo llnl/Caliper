@@ -168,12 +168,12 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
         // nodes merged from other MPI ranks have them already).
         auto unit_it = m_attr_units.find(name);
         if (unit_it != m_attr_units.end() && Entry(parent).get(m_unit_attr).empty()) {
-            Variant v_unit(static_cast<const char*>(unit_it->second.c_str()));
+            Variant v_unit(unit_it->second.c_str());
             parent = get_or_create_node(m_unit_attr, v_unit, parent);
         }
         auto alias_it = m_attr_aliases.find(name);
         if (alias_it != m_attr_aliases.end() && Entry(parent).get(m_alias_attr).empty()) {
-            Variant v_alias(static_cast<const char*>(alias_it->second.c_str()));
+            Variant v_alias(alias_it->second.c_str());
             parent = get_or_create_node(m_alias_attr, v_alias, parent);
         }
 
@@ -287,7 +287,7 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
         Variant v_data = node->data();
 
         if (v_data.type() == CALI_TYPE_STRING)
-            v_data = make_string_variant(static_cast<const char*>(v_data.data()), v_data.size());
+            v_data = make_string_variant(v_data.as_c_str(), v_data.size());
 
         return merge_node(node->id(), attr_node->id(), parent ? parent->id() : CALI_INV_ID, v_data);
     }
@@ -354,7 +354,7 @@ struct CaliperMetadataDB::CaliperMetadataDBImpl {
             Variant v_value(data);
 
             if (v_value.type() == CALI_TYPE_STRING)
-                v_value = make_string_variant(static_cast<const char*>(data.data()), data.size());
+                v_value = make_string_variant(data.as_c_str(), data.size());
 
             node = create_node(attr.id(), v_value, parent);
         }
@@ -541,7 +541,7 @@ Node* CaliperMetadataDB::merge_node(
 
     // if value is a string, find or insert it in string DB
     if (v_data.type() == CALI_TYPE_STRING)
-        v_data = mP->make_string_variant(static_cast<const char*>(value.data()), value.size());
+        v_data = mP->make_string_variant(value.as_c_str(), value.size());
 
     return mP->merge_node(node_id, attr_id, prnt_id, v_data, idmap);
 }
