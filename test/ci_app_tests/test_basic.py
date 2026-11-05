@@ -126,6 +126,19 @@ class CaliperBasicTest(unittest.TestCase):
                         'region'       : 'thread_proc',
                         'global'       : '999' }))
 
+    def test_main_thread_only(self):
+        """ Test main_thread_only option """
+
+        target_cmd = [ './ci_test_thread' ]
+
+        out,_ = cat.run_test(target_cmd, { 'CALI_CONFIG': 'runtime-profile,main_thread_only,output=stdout,use.mpi=false' })
+        snapshots,_ = caliperreader.read_caliper_contents(io.StringIO(out.decode()))
+
+        self.assertFalse(cat.has_snapshot_with_attributes(
+            snapshots, { 'region' : 'thread_proc' }))
+        self.assertTrue(cat.has_snapshot_with_attributes(
+            snapshots, { 'region' : 'main' }))
+
     def test_createdir(self):
         """ Test directory creation """
         target_cmd = [ './ci_test_macros', '0', 'runtime-profile,use.mpi=false,output.format=json,output=foo/bar/test.json' ]
