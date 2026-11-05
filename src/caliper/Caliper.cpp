@@ -409,7 +409,7 @@ struct Caliper::GlobalData {
         init_api_attributes(&c);
 
         thread_id_attr = c.create_attribute("cali.thread_id", CALI_TYPE_UINT,
-            CALI_ATTR_SCOPE_THREAD | CALI_ATTR_SKIP_EVENTS | CALI_ATTR_ASVALUE);
+            CALI_ATTR_SCOPE_THREAD | CALI_ATTR_SKIP_EVENTS | CALI_ATTR_UNALIGNED);
 
         c.set(thread_id_attr, cali_make_variant_from_uint(tObj.t_ptr->thread_id));
 
