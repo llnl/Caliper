@@ -378,6 +378,12 @@ const char* builtin_base_option_specs = R"json(
   "local": "let o_a_v.slot=first(aggregate.slot) aggregate min(o_a_v.slot) order by min#o_a_v.slot",
   "cross": "aggregate min(min#o_a_v.slot) order by min#min#o_a_v.slot"
  }
+},{
+ "name": "main_thread_only",
+ "type": "bool",
+ "description": "Only include measurements from the main thread in results.",
+ "category": "metric",
+ "query": { "local": "where cali.thread_id=0" }
 }
 ]
 )json";
@@ -535,13 +541,6 @@ const char* builtin_mpi_option_specs = R"json(
 const char* builtin_gotcha_option_specs = R"json(
 [
 {
- "name": "main_thread_only",
- "type": "bool",
- "description": "Only include measurements from the main thread in results.",
- "category": "region",
- "services": [ "pthread" ],
- "query": { "local": "where pthread.is_master=true" }
-},{
  "name": "forward_thread_region",
  "type": "bool",
  "description": "Forward parent thread's region to child thread on thread creation",
