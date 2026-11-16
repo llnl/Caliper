@@ -41,7 +41,8 @@ variables:
   # Project specific variants for corona
   PROJECT_CORONA_VARIANTS: "+tests"
   # Project specific deps for corona
-  PROJECT_CORONA_DEPS: ""
+  # ROCm 6.4.3 needs GCC Fortran for Adiak, including when the root is ~fortran.
+  PROJECT_CORONA_DEPS: "^[when='%c=llvm-amdgpu@=6.4.3 ^adiak']adiak %fortran=gcc@=13.3.1"
 
   # Tioga (flux) allocation settings
   TIOGA_SHARED_ALLOC: "--queue=pci --exclusive --time-limit=15m --nodes=1 -o per-resource.count=2"
@@ -49,7 +50,8 @@ variables:
   # Project specific variants for tioga
   PROJECT_TIOGA_VARIANTS: "+tests"
   # Project specific deps for tioga
-  PROJECT_TIOGA_DEPS: ""
+  # ROCm 6.4.3 needs GCC Fortran for Adiak, including when the root is ~fortran.
+  PROJECT_TIOGA_DEPS: "^[when='%c=llvm-amdgpu@=6.4.3 ^adiak']adiak %fortran=gcc@=13.3.1"
 
   # Tuolumne (flux) allocation settings
   TUOLUMNE_SHARED_ALLOC: "--queue=pci --exclusive --time-limit=15m --nodes=1 -o per-resource.count=2"
@@ -57,7 +59,8 @@ variables:
   # Project specific variants for tuolumne
   PROJECT_TUOLUMNE_VARIANTS: "+tests"
   # Project specific deps for tuolumne
-  PROJECT_TUOLUMNE_DEPS: ""
+  # ROCm 6.4.3 needs GCC Fortran for Adiak, including when the root is ~fortran.
+  PROJECT_TUOLUMNE_DEPS: "^[when='%c=llvm-amdgpu@=6.4.3 ^adiak']adiak %fortran=gcc@=13.3.1"
 
   # Lassen (LSF) allocation settings
   # Lassen uses a different job scheduler (spectrum lsf) that does not
