@@ -21,10 +21,10 @@ variables:
 # project. We keep ${PROJECT_<MACHINE>_VARIANTS} and ${PROJECT_<MACHINE>_DEPS}
 # So that the comparison with the original job is easier.
 
-# Override the rocm 6.4.3 job to enforce preference/requirement on compiler
+# Keep the ROCm 6.4.3 override aligned with the shared compiler spec.
 rocmcc_6_4_3_hip:
   variables:
-    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} +rocm amdgpu_target=gfx942 %%llvm-amdgpu@=6.4.3 ^hip@6.4.3 ${PROJECT_TUOLUMNE_DEPS}"
+    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} +rocm amdgpu_target=gfx942 %%c,cxx=llvm-amdgpu@=6.4.3 %%[when='%fortran' virtuals=fortran]gcc@=13.3.1 ^hip@6.4.3 ${PROJECT_TUOLUMNE_DEPS}"
   extends: .job_on_tuolumne
 
 ############
@@ -38,11 +38,11 @@ rocmcc_6_4_3_hip:
 # As long as cce 18 fails, we keep this one.
 cce_21_0_0:
   variables:
-    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} %cce@=21.0.0 ${PROJECT_TUOLUMNE_DEPS}"
+    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} %%cce@=21.0.0 ${PROJECT_TUOLUMNE_DEPS}"
   extends: .job_on_tuolumne
 
 # TODO: update cce when vetted
 master:
   variables:
-    SPEC: " +tests %cce@21.0.0"
+    SPEC: " +tests %%cce@21.0.0"
   extends: .job_on_tuolumne
