@@ -127,6 +127,8 @@ class CaliTraceEventConverter:
         self.samples = []
 
         self.tsync   = {}
+        self.tstart  = {}
+        self.file_pids = set()
 
         self.counters = self.cfg["counters"]
 
@@ -157,9 +159,12 @@ class CaliTraceEventConverter:
         self.end_timing(ts)
 
         ts = self.start_timing("  Processing ...")
+        self.file_pids = set()
         for rec in trace:
             self._process_record(rec[1])
         self.end_timing(ts)
+
+        self._record_start_time(self.file_pids)
 
     def write(self, output):
         result = dict(traceEvents=self.records, otherData=self.reader.globals)
@@ -173,12 +178,30 @@ class CaliTraceEventConverter:
         json.dump(result, output, indent=indent)
         self.written += len(self.records) + len(self.samples)
 
-    def sync_timestamps(self):
-        if len(self.tsync) == 0:
+    def _record_start_time(self, pids):
+        """Save the global start time (Caliper 2.14+) of the file that was
+        just read for each process ID found in it"""
+
+        try:
+            sec  = int(self.reader.globals["starttime.sec"])
+            nsec = int(self.reader.globals["starttime.nsec"])
+        except (KeyError, ValueError):
             return
 
-        maxts = max(self.tsync.values())
-        adjust = { pid: maxts - ts for pid, ts in self.tsync.items() }
+        for pid in pids:
+            self.tstart.setdefault(pid, sec * 1000000000 + nsec)
+
+    def sync_timestamps(self):
+        if len(self.tsync) > 0:
+            maxts = max(self.tsync.values())
+            adjust = { pid: maxts - ts for pid, ts in self.tsync.items() }
+        elif len(self.tstart) > 0:
+            # No explicit sync records: fall back to the global start time
+            # (wall-clock) recorded by Caliper. Offsets are in microseconds.
+            first = min(self.tstart.values())
+            adjust = { pid: (ts - first) * 1e-3 for pid, ts in self.tstart.items() }
+        else:
+            return
 
         for rec in self.records:
             rec["ts"] += adjust.get(rec["pid"], 0.0)
@@ -203,6 +226,8 @@ class CaliTraceEventConverter:
         tid  = int(_get_first_from_list(rec, self.tid_attributes))
 
         trec = dict(pid=pid,tid=tid)
+
+        self.file_pids.add(pid)
 
         self._process_counters(rec, (pid, tid))
 
@@ -341,7 +366,8 @@ Options:
                       group=attribute1,attribute2,...
 --pretty            Pretty-print output
 --sync              Enable time-stamp synchronization
-                      Requires timestamp sync records in the input traces
+                      Uses timestamp sync records in the input traces if
+                      present, otherwise the global start time (Caliper 2.14+)
 --pid-attributes    List of process ID attributes
 --tid-attributes    List of thread ID attributes
 --verbose           Print detailed progress output
