@@ -35,8 +35,10 @@
 # Utilities and helper functions for the Caliper application/workflow test framework 
 #
 
+import io
 import os
 import subprocess
+import sys
 
 class CaliperExecError(Exception):
     """ Error class when running a process fails
@@ -77,6 +79,7 @@ def run_test(target_cmd, env):
     proc_out, proc_err = target_proc.communicate()
 
     if (target_proc.returncode != 0):
+        print(proc_err.decode(), file=sys.stderr)
         raise CaliperExecError('Command ' + str(target_cmd) + ' exited with ' + str(target_proc.returncode))
 
     return (proc_out,proc_err)
