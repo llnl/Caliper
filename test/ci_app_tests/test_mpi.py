@@ -4,6 +4,7 @@
 import io
 import os
 import unittest
+from pathlib import Path
 
 import caliperreader
 import calipertest as cat
@@ -16,6 +17,7 @@ class CaliperMPITest(unittest.TestCase):
 
         caliper_config = {
             'PATH'                    : '/usr/bin', # for ssh/rsh
+            'HOME'                    : str(Path.home()), # somehow openmpi 5 needs a home dir now
             'CALI_CHANNEL_FLUSH_ON_EXIT' : 'false',
             'CALI_SERVICES_ENABLE'    : 'event,mpi,mpireport,trace',
             'CALI_MPI_WHITELIST'      : 'all',
@@ -42,6 +44,7 @@ class CaliperMPITest(unittest.TestCase):
 
         caliper_config = {
             'PATH'                    : '/usr/bin', # for ssh/rsh
+            'HOME'                    : str(Path.home()), # somehow openmpi 5 needs a home dir now
             'CALI_CHANNEL_FLUSH_ON_EXIT' : 'false',
             'CALI_SERVICES_ENABLE'    : 'event,mpi,mpireport,trace',
             'CALI_MPI_WHITELIST'      : 'all',
@@ -68,6 +71,7 @@ class CaliperMPITest(unittest.TestCase):
 
         caliper_config = {
             'PATH'                    : '/usr/bin', # for ssh/rsh
+            'HOME'                    : str(Path.home()), # somehow openmpi 5 needs a home dir now
             'CALI_CHANNEL_FLUSH_ON_EXIT' : 'false',
             'CALI_SERVICES_ENABLE'    : 'event,mpi,mpireport,trace',
             'CALI_MPI_WHITELIST'      : 'MPI_Bcast',
@@ -90,6 +94,7 @@ class CaliperMPITest(unittest.TestCase):
 
         caliper_config = {
             'PATH'                    : '/usr/bin', # for ssh/rsh
+            'HOME'                    : str(Path.home()), # somehow openmpi 5 needs a home dir now
             'CALI_CHANNEL_FLUSH_ON_EXIT' : 'false',
             'CALI_SERVICES_ENABLE'    : 'event,mpi,mpireport,trace',
             'CALI_MPI_BLACKLIST'      : 'MPI_Barrier,MPI_Reduce',
@@ -112,6 +117,7 @@ class CaliperMPITest(unittest.TestCase):
 
         caliper_config = {
             'PATH'                    : '/usr/bin', # for ssh/rsh
+            'HOME'                    : str(Path.home()), # somehow openmpi 5 needs a home dir now
             'CALI_CHANNEL_FLUSH_ON_EXIT' : 'false',
             'CALI_SERVICES_ENABLE'    : 'event,mpi,mpireport,trace',
             'CALI_MPI_WHITELIST'      : 'MPI_Bcast,MPI_Reduce',
@@ -135,6 +141,7 @@ class CaliperMPITest(unittest.TestCase):
 
         caliper_config = {
             'PATH'                    : '/usr/bin', # for ssh/rsh
+            'HOME'                    : str(Path.home()), # somehow openmpi 5 needs a home dir now
             'CALI_LOG_VERBOSITY'      : '0',
             'CALI_SERVICES_ENABLE'    : 'event,mpi,recorder,trace',
             'CALI_MPI_MSG_TRACING'    : 'true',
@@ -170,7 +177,7 @@ class CaliperMPITest(unittest.TestCase):
             'MPI_Bcast'
         ]
 
-        report_out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin' })
+        report_out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin', 'HOME': str(Path.home()) })
         lines = report_out.decode().splitlines()
 
         for target in log_targets:
@@ -183,7 +190,7 @@ class CaliperMPITest(unittest.TestCase):
     def test_mpi_inst_options(self):
         target_cmd = [ './ci_test_mpi_before_cali', 'spot,profile.mpi,mpi.exclude=MPI_Barrier,output=stdout' ]
 
-        out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin' })
+        out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin', 'HOME': str(Path.home()) })
         snapshots,_ = caliperreader.read_caliper_contents(io.StringIO(out.decode()))
 
         self.assertTrue(cat.has_snapshot_with_attributes(
@@ -205,7 +212,7 @@ class CaliperMPITest(unittest.TestCase):
             'MPI_Barrier'
         ]
 
-        report_out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin' })
+        report_out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin', 'HOME': str(Path.home()) })
         lines = report_out.decode().splitlines()
 
         for target in log_targets:
@@ -223,7 +230,7 @@ class CaliperMPITest(unittest.TestCase):
             'MPI_Barrier'
         ]
 
-        report_out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin' })
+        report_out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin', 'HOME': str(Path.home()) })
         lines = report_out.decode().splitlines()
 
         for target in log_targets:
@@ -236,7 +243,7 @@ class CaliperMPITest(unittest.TestCase):
     def test_collective_output_channel_spot(self):
         target_cmd = [ './ci_test_collective_output_channel', 'spot' ]
 
-        out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin' })
+        out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin', 'HOME': str(Path.home()) })
         snapshots,_ = caliperreader.read_caliper_contents(io.StringIO(out.decode()))
 
         self.assertTrue(cat.has_snapshot_with_attributes(
@@ -252,7 +259,7 @@ class CaliperMPITest(unittest.TestCase):
             'MPI_Barrier'
         ]
 
-        report_out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin' })
+        report_out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin', 'HOME': str(Path.home()) })
         lines = report_out.decode().splitlines()
 
         for target in log_targets:
@@ -265,7 +272,7 @@ class CaliperMPITest(unittest.TestCase):
     def test_mpi_channel_manager_trace(self):
         target_cmd = [ './ci_test_mpi_channel_manager', 'event-trace,trace.mpi,output=stdout' ]
 
-        out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin' })
+        out,_ = cat.run_test(target_cmd, { 'PATH': '/usr/bin', 'HOME': str(Path.home()) })
         snapshots,_ = caliperreader.read_caliper_contents(io.StringIO(out.decode()))
 
         self.assertTrue(cat.has_snapshot_with_attributes(
