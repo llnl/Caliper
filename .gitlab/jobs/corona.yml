@@ -24,7 +24,7 @@ variables:
 # Override to allow failure.
 rocmcc_6_4_3_hip:
   variables:
-    SPEC: "${PROJECT_CORONA_VARIANTS} +rocm amdgpu_target=gfx906 %%rocm-6-4-3-gcc-13 ^hip@6.4.3 ${PROJECT_CORONA_DEPS}"
+    SPEC: "${PROJECT_CORONA_VARIANTS} +rocm amdgpu_target=gfx906 %rocm-6-4-3-gcc-13 ^hip@6.4.3 ${PROJECT_CORONA_DEPS}"
   extends: .job_on_corona
   allow_failure: true
 
