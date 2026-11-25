@@ -17,5 +17,6 @@ variables:
 ## Template for extra jobs defined by the project.
 master:
   variables:
+    RADIUSS_SPACK_STACK: "gcc-13.3.1-mvapich2-2.3.7.gcc_13"
     SPEC: " +tests ~papi"
   extends: .job_on_dane

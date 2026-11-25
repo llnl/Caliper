@@ -21,10 +21,11 @@ variables:
 # project. We keep ${PROJECT_<MACHINE>_VARIANTS} and ${PROJECT_<MACHINE>_DEPS}
 # So that the comparison with the original job is easier.
 
-# Keep the ROCm 6.4.3 override aligned with the shared compiler spec.
+# Select the same complete ROCm 6.4.3 stack as the shared job.
 rocmcc_6_4_3_hip:
   variables:
-    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} +rocm amdgpu_target=gfx942 %c,cxx=llvm-amdgpu@=6.4.3 %[when='%fortran' virtuals=fortran]gcc@=13.3.1 ^hip@6.4.3 ${PROJECT_TUOLUMNE_DEPS}"
+    RADIUSS_SPACK_STACK: "rocm-6.4.3-gcc-13.3.1-cray-mpich-9.0.1"
+    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} +rocm ${PROJECT_TUOLUMNE_DEPS}"
   extends: .job_on_tuolumne
 
 ############
@@ -33,16 +34,18 @@ rocmcc_6_4_3_hip:
 # We do not recommend using ${PROJECT_<MACHINE>_VARIANTS} and
 # ${PROJECT_<MACHINE>_DEPS} in the extra jobs. There is no reason not to fully
 # describe the spec here.
-# The correct way is now to use llvm-amdgpu compiler directly as done in shared spec
+# Compiler, Fortran, MPI and GPU target selections belong to the stack.
 
 # As long as cce 18 fails, we keep this one.
 cce_21_0_0:
   variables:
-    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} %cce@=21.0.0 ${PROJECT_TUOLUMNE_DEPS}"
+    RADIUSS_SPACK_STACK: "cce-21.0.0-cray-mpich-9.1.0"
+    SPEC: "${PROJECT_TUOLUMNE_VARIANTS} ${PROJECT_TUOLUMNE_DEPS}"
   extends: .job_on_tuolumne
 
 # TODO: update cce when vetted
 master:
   variables:
-    SPEC: " +tests %cce@21.0.0"
+    RADIUSS_SPACK_STACK: "cce-21.0.0-cray-mpich-9.1.0"
+    SPEC: " +tests"
   extends: .job_on_tuolumne
